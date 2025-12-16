@@ -1,0 +1,11 @@
+FROM node:22-alpine
+
+WORKDIR /app
+
+COPY nova-ui/package.json nova-ui/package-lock.json* ./
+
+RUN npm install
+
+COPY nova-ui .
+
+CMD ["npm", "run", "dev", "--", "--host"]

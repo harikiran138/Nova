@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nova-agent-cli"
+version = "1.1.0"
+description = "Local AI Agent CLI powered by Ollama"
+authors = [
+    {name = "Nova Team"}
+]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "requests>=2.31.0",
+    "rich>=13.7.0",
+]
+
+[project.scripts]
+nova = "nova_cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+py-modules = ["nova_cli"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
