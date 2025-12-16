@@ -1,0 +1,16 @@
+{
+    "name": "Amp Green",
+    "type": "dark",
+    "colors": {
+        "primary": "#00ff00",
+        "secondary": "#008800",
+        "accent": "#ccff00",
+        "warning": "#ffff00",
+        "error": "#ff0000",
+        "background": "#001100",
+        "surface": "#002200",
+        "border": "#004400",
+        "text": "#ccffcc",
+        "text_dim": "#448844"
+    }
+}

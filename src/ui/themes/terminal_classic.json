@@ -1,0 +1,16 @@
+{
+    "name": "Terminal Classic",
+    "type": "dark",
+    "colors": {
+        "primary": "#ffffff",
+        "secondary": "#cccccc",
+        "accent": "#ffffff",
+        "warning": "#ffff00",
+        "error": "#ff0000",
+        "background": "#000000",
+        "surface": "#111111",
+        "border": "#333333",
+        "text": "#ffffff",
+        "text_dim": "#888888"
+    }
+}

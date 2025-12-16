@@ -1,0 +1,16 @@
+{
+    "name": "Nova Blue",
+    "type": "dark",
+    "colors": {
+        "primary": "#00aeff",
+        "secondary": "#0077cc",
+        "accent": "#00ff9d",
+        "warning": "#ffb700",
+        "error": "#ff0055",
+        "background": "#0a0a12",
+        "surface": "#151520",
+        "border": "#2a2a35",
+        "text": "#e0e0e0",
+        "text_dim": "#808090"
+    }
+}
