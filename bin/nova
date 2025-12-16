@@ -1,0 +1,33 @@
+#!/bin/bash
+# Nova Agent Wrapper Script
+
+# Resolve the directory where this script is located (bin/)
+# Use readlink to resolve symlinks if needed
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do 
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" 
+done
+SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Activate virtual environment
+if [ -f "$PROJECT_ROOT/.venv/bin/activate" ]; then
+    source "$PROJECT_ROOT/.venv/bin/activate"
+else
+    echo "❌ Virtual environment not found at $PROJECT_ROOT/.venv"
+    echo "Please run install.sh in the project root first."
+    exit 1
+fi
+
+# Set PYTHONPATH to include project root
+export PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH"
+
+# Load .env from project root if it exists (for defaults like OLLAMA_BASE_URL)
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    export $(grep -v '^#' "$PROJECT_ROOT/.env" | xargs)
+fi
+
+# Run the CLI, passing all arguments
+python3 "$PROJECT_ROOT/src/nova_cli.py" "$@"
