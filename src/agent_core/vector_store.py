@@ -79,10 +79,12 @@ class VectorStore:
         """Get embedding from MediaPipe (Fast) or Ollama (Slow)."""
         if self.use_mediapipe and self.embedder:
             try:
+                # print("DEBUG: Generating embedding via Google AI Edge (MediaPipe)...") # Optional debug
                 embedding_result = self.embedder.embed(text)
                 return embedding_result.embeddings[0].embedding.tolist()
             except Exception as e:
-                print(f"MediaPipe Embedding Error: {e}")
+                print(f"Error: MediaPipe Embedding failed: {e}")
+                print("Falling back to Ollama...")
                 # Fallthrough to Ollama
 
         # Fallback: Ollama

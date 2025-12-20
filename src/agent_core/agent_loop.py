@@ -54,9 +54,9 @@ class AgentLoop:
     CONTINUOUS LEARNING:
     - If you are UNSURE about a topic or lack information (confidence < 0.6), you MUST use `web.learn_topic(topic)` or `web.search(query)`.
     - Do not guess. Search and learn.
-    - **VISION CAPABILITIES**: You have access to `vision.detect` and `vision.classify`.
+    - **VISION CAPABILITIES (GOOGLE AI EDGE)**: You have access to `vision.detect` and `vision.classify`.
+      - **PRIORITY**: Use these local tools for image analysis. They are fast and private.
       - If the user asks "what is in this image?", use `vision.detect`.
-      - If the user provides a path to an image, consider analyzing it.
       - Vision tools run LOCALLY using Google AI Edge (MediaPipe).
     """
 
