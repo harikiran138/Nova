@@ -15,24 +15,13 @@ from rich.table import Table
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.agent_core import Config, OllamaClient, AgentLoop
-from src.agent_core.gemini_client import GeminiClient
-from src.agent_core.openrouter_client import OpenRouterClient
 from src.agent_core.tools import ToolRegistry
 
 console = Console()
 
 def get_client(config: Config):
     """Get the appropriate model client based on config."""
-    if config.model_provider == "gemini":
-        if not config.gemini_api_key:
-            raise ValueError("GEMINI_API_KEY not set. Please set it via environment variable.")
-        return GeminiClient(config.gemini_api_key, model=config.gemini_model)
-    elif config.model_provider == "openrouter":
-        if not config.openrouter_api_key:
-            raise ValueError("OPENROUTER_API_KEY not set. Please set it via environment variable.")
-        return OpenRouterClient(config.openrouter_api_key, model=config.openrouter_model)
-    else:
-        return OllamaClient(config.ollama_base_url, config.ollama_model)
+    return OllamaClient(config.ollama_base_url, config.ollama_model)
 
 def print_welcome(config: Config, client):
     """Print welcome message with configuration info."""
@@ -49,7 +38,7 @@ def print_welcome(config: Config, client):
     tip = random.choice(tips)
 
     # Get actual tool count
-    registry = ToolRegistry(config.workspace_dir)
+    registry = ToolRegistry(config.workspace_dir, sandbox_mode=config.security_mode)
     tool_count = len(registry.tools)
     
     console.print(Panel.fit(
@@ -68,14 +57,6 @@ def print_welcome(config: Config, client):
 
 def select_model(client, config: Config) -> str:
     """Interactive model selection."""
-    if isinstance(client, (GeminiClient, OpenRouterClient)):
-        # For APIs, allow user to type the model name
-        current = client.model
-        console.print(f"Current Model: [cyan]{current}[/cyan]")
-        new_model = Prompt.ask("Enter new model name (or press Enter to keep current)")
-        if new_model.strip():
-            return new_model.strip()
-        return current
 
     # Ollama Logic
     console.print("[dim]Fetching available models...[/dim]")
@@ -118,63 +99,20 @@ def handle_slash_command(command: str, agent: AgentLoop, client, config: Config)
         agent.reset_conversation()
         return "continue"
         
-    elif cmd == '/provider':
-        if len(cmd_parts) < 2:
-            console.print("[red]Usage: /provider <ollama|gemini|openrouter>[/red]")
-            return "continue"
-        
-        new_provider = cmd_parts[1].lower()
-        if new_provider not in ['ollama', 'gemini', 'openrouter']:
-            console.print(f"[red]Unknown provider: {new_provider}[/red]")
-            return "continue"
-            
-        config.model_provider = new_provider
-        console.print(f"[green]Switched provider to {new_provider}[/green]")
-        return "reload"
-
     elif cmd == '/model':
         new_model = select_model(client, config)
         if new_model != client.model:
-            # Update config based on provider
-            if config.model_provider == "ollama":
-                config.ollama_model = new_model
-            elif config.model_provider == "gemini":
-                config.gemini_model = new_model
-            elif config.model_provider == "openrouter":
-                config.openrouter_model = new_model
-                
+            config.ollama_model = new_model
+            client.model = new_model
             console.print(f"[green]Switched to {new_model}[/green]")
-            return "reload"
             return "reload"
         return "continue"
 
-    elif cmd == '/key':
-        if len(cmd_parts) < 3:
-            console.print("[red]Usage: /key <provider> <value>[/red]")
-            console.print("Providers: gemini, openrouter")
-            return "continue"
-            
-        provider = cmd_parts[1].lower()
-        value = cmd_parts[2]
-        
-        if provider == 'gemini':
-            Config.update_env_variable("GEMINI_API_KEY", value)
-            console.print("[green]Updated GEMINI_API_KEY successfully.[/green]")
-            return "reload"
-        elif provider == 'openrouter':
-            Config.update_env_variable("OPENROUTER_API_KEY", value)
-            console.print("[green]Updated OPENROUTER_API_KEY successfully.[/green]")
-            return "reload"
-        else:
-            console.print(f"[red]Unknown provider for key update: {provider}[/red]")
-            return "continue"
-            
     elif cmd == '/help':
         help_text = """
 # Available Commands
 
-- `/provider <name>`: Switch provider (ollama, gemini, openrouter)
-- `/model`: Change model for current provider
+- `/model`: Change model for current provider (Ollama)
 - `/clear`: Clear conversation history
 - `/info`: Show current session configuration
 - `/help`: Show this help message
@@ -189,7 +127,7 @@ def handle_slash_command(command: str, agent: AgentLoop, client, config: Config)
         
     else:
         import difflib
-        available_commands = ['/provider', '/model', '/clear', '/info', '/help', '/quit', '/exit']
+        available_commands = ['/model', '/clear', '/info', '/help', '/quit', '/exit']
         matches = difflib.get_close_matches(cmd, available_commands, n=1, cutoff=0.6)
         
         console.print(f"[red]Unknown command: {cmd}[/red]")
@@ -215,7 +153,8 @@ def run_interactive(config: Config, profile_name: str = "general", sandbox_mode:
         workspace_dir=config.workspace_dir,
         allow_shell=config.allow_shell_commands,
         shell_allowlist=config.shell_command_allowlist,
-        offline_mode=config.offline_mode
+        offline_mode=config.offline_mode,
+        sandbox_mode=sandbox_mode
     )
     
     # Status Handler
@@ -295,7 +234,8 @@ def run_oneshot(config: Config, command: str):
         workspace_dir=config.workspace_dir,
         allow_shell=config.allow_shell_commands,
         shell_allowlist=config.shell_command_allowlist,
-        offline_mode=config.offline_mode
+        offline_mode=config.offline_mode,
+        sandbox_mode=config.security_mode
     )
     agent = AgentLoop(client, tools)
     
@@ -330,7 +270,8 @@ def run_task_command(config: Config, args):
         workspace_dir=config.workspace_dir,
         allow_shell=config.allow_shell_commands,
         shell_allowlist=config.shell_command_allowlist,
-        offline_mode=config.offline_mode
+        offline_mode=config.offline_mode,
+        sandbox_mode=args.sandbox if args.sandbox is not None else config.security_mode
     )
     
     try:
@@ -363,7 +304,8 @@ def list_tools(config: Config):
         workspace_dir=config.workspace_dir,
         allow_shell=config.allow_shell_commands,
         shell_allowlist=config.shell_command_allowlist,
-        offline_mode=config.offline_mode
+        offline_mode=config.offline_mode,
+        sandbox_mode=config.security_mode
     )
     
     console.print(Panel(tools.get_tool_descriptions(), title="Available Tools", border_style="blue"))
@@ -391,7 +333,8 @@ def run_sandbox_command(config: Config, args):
         tools = ToolRegistry(
             workspace_dir=config.workspace_dir,
             allow_shell=config.allow_shell_commands,
-            shell_allowlist=config.shell_command_allowlist
+            shell_allowlist=config.shell_command_allowlist,
+            sandbox_mode=True
         )
         # Sandbox build implies sandbox mode and likely coder profile if not specified
         profile = args.agent or "coder"
@@ -423,8 +366,8 @@ def show_status(config: Config, args):
     """Show current status."""
     console.print(Panel(f"""
 [bold]Nova Status[/bold]
-Model Provider: [cyan]{config.model_provider}[/cyan]
-Model: [cyan]{config.ollama_model if config.model_provider == 'ollama' else 'gemini-pro'}[/cyan]
+Model Provider: [cyan]Ollama[/cyan]
+Model: [cyan]{config.ollama_model}[/cyan]
 Workspace: [yellow]{config.workspace_dir}[/yellow]
 Sandbox Mode: [magenta]{'Active' if args.sandbox else 'Inactive'}[/magenta]
 Agent Profile: [green]{args.agent or 'general'}[/green]
@@ -449,11 +392,11 @@ def run(goal, agent, sandbox, resume):
     """Execute a goal."""
     config = Config.from_env()
     client = get_client(config)
-    tools = ToolRegistry(config.workspace_dir, config.allow_shell_commands, config.shell_command_allowlist, offline_mode=config.offline_mode)
-    
     if sandbox is None:
         profiles = config.load_profiles()
         sandbox = profiles.get(agent, {}).get("default_sandbox", False)
+
+    tools = ToolRegistry(config.workspace_dir, config.allow_shell_commands, config.shell_command_allowlist, offline_mode=config.offline_mode, sandbox_mode=sandbox)
 
     agent_loop = AgentLoop(client, tools, profile_name=agent, sandbox_mode=sandbox)
     
@@ -565,7 +508,8 @@ def self_analyze():
         workspace_dir=config.workspace_dir,
         allow_shell=config.allow_shell_commands,
         shell_allowlist=config.shell_command_allowlist,
-        offline_mode=config.offline_mode
+        offline_mode=config.offline_mode,
+        sandbox_mode=config.security_mode
     )
     
     console.print("\n[bold]1. Tool Ecosystem Analysis[/bold]")
@@ -629,7 +573,7 @@ def sandbox_build(goal, agent):
     config.workspace_dir = sandbox.path
     
     client = get_client(config)
-    tools = ToolRegistry(config.workspace_dir, config.allow_shell_commands, config.shell_command_allowlist, offline_mode=config.offline_mode)
+    tools = ToolRegistry(config.workspace_dir, config.allow_shell_commands, config.shell_command_allowlist, offline_mode=config.offline_mode, sandbox_mode=True)
     
     planner = Planner(client, tools, profile_name=agent)
     agent_loop = AgentLoop(client, tools, profile_name=agent, sandbox_mode=True)
@@ -642,41 +586,6 @@ def sandbox_build(goal, agent):
         agent_loop.run_task(task)
     except Exception as e:
         console.print(f"[red]Sandbox build failed: {e}[/red]")
-        sys.exit(1)
-
-@cli.command()
-@click.argument("goal")
-def duo(goal):
-    """Run in Collaborative (Duo) Mode."""
-    config = Config.from_env()
-    
-    # Ensure we have both
-    if not config.gemini_api_key:
-        console.print("[red]Error: Duo mode requires GEMINI_API_KEY.[/red]")
-        sys.exit(1)
-        
-    # Initialize Clients
-    # Primary: Gemini
-    primary = GeminiClient(config.gemini_api_key)
-    # Secondary: Ollama
-    secondary = OllamaClient(config.ollama_base_url, config.ollama_model)
-    
-    # Check connections
-    if not primary.test_connection():
-        console.print("[red]✗ Cannot connect to Gemini[/red]")
-        sys.exit(1)
-    if not secondary.test_connection():
-        console.print("[red]✗ Cannot connect to Ollama[/red]")
-        sys.exit(1)
-        
-    tools = ToolRegistry(config.workspace_dir, config.allow_shell_commands, config.shell_command_allowlist, offline_mode=config.offline_mode)
-    
-    try:
-        from src.agent_core.collaborative_loop import CollaborativeLoop
-        duo_loop = CollaborativeLoop(primary, secondary, tools)
-        duo_loop.run_duo(goal)
-    except Exception as e:
-        console.print(f"[red]Duo mode failed: {e}[/red]")
         sys.exit(1)
 
 def main():

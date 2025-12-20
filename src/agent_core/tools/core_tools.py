@@ -19,7 +19,7 @@ class FileTool:
     """File system operations."""
     
     def __init__(self, workspace: Path, sandbox_mode: bool = False):
-        self.workspace = workspace
+        self.workspace = workspace.resolve()
         self.sandbox_mode = sandbox_mode
 
     def _safe_path(self, path: str) -> Path:
@@ -93,11 +93,20 @@ class GitTool:
 
 class ShellTool:
     """Safe shell execution."""
-    def __init__(self, workspace: Path):
+    def __init__(self, workspace: Path, allow_shell: bool = False, allowlist: List[str] = None):
         self.workspace = workspace
+        self.allow_shell = allow_shell
+        self.allowlist = allowlist or []
 
     def run(self, command: str, cwd: str = None) -> str:
         """Run a shell command."""
+        if not self.allow_shell:
+            raise PermissionError("Shell commands are disabled.")
+
+        cmd_base = command.split()[0] if command else ""
+        if cmd_base not in self.allowlist:
+            raise ValueError(f"Command '{cmd_base}' is not in allowlist.")
+
         work_dir = (self.workspace / cwd).resolve() if cwd else self.workspace
         try:
             result = subprocess.run(
@@ -120,10 +129,14 @@ class ShellTool:
 
     def list_processes(self) -> str:
         """List running processes."""
+        if not self.allow_shell:
+             raise PermissionError("Shell commands are disabled.")
         return "\n".join([f"{p.pid}: {p.name()}" for p in psutil.process_iter(['pid', 'name'])])
 
     def kill_safe(self, pid: int) -> str:
         """Kill a process by PID."""
+        if not self.allow_shell:
+             raise PermissionError("Shell commands are disabled.")
         try:
             p = psutil.Process(pid)
             p.terminate()

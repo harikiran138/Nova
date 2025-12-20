@@ -102,6 +102,52 @@ class ThemeManager:
         color: $error;
         text-style: bold;
     }}
+    
+    /* Dashboard Layout */
+    #main_container {{
+        layout: grid;
+        grid-size: 2;
+        grid-columns: 2fr 1fr;
+    }}
+    
+    /* Right Column Panels */
+    .monitor-panel, .vision-panel, .memory-panel {{
+        background: $surface;
+        border: solid $border;
+        margin-bottom: 1;
+        height: auto;
+    }}
+    
+    .header-small {{
+        background: $border;
+        color: $accent;
+        text-style: bold;
+        padding: 0 1;
+        width: 100%;
+    }}
+    
+    /* Monitor */
+    .monitor-row {{
+        height: 3;
+        align-vertical: middle;
+        padding: 0 1;
+    }}
+    .label {{ width: 10; color: $text-dim; }}
+    Digits {{ color: $primary; }}
+    
+    /* Vision */
+    .vision-content {{
+        padding: 1;
+        color: $secondary;
+    }}
+    
+    /* Memory */
+    .memory-log {{
+        height: 1fr;
+        border-top: solid $border;
+        background: $background;
+        color: $text-dim;
+    }}
     """
     
     def cycle_theme(self) -> str:

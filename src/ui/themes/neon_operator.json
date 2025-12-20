@@ -1,0 +1,15 @@
+{
+    "name": "Neon Operator",
+    "colors": {
+        "primary": "#00ff9f",
+        "secondary": "#00b8ff",
+        "accent": "#d600ff",
+        "warning": "#ffb86c",
+        "error": "#ff5555",
+        "background": "#0a0a12",
+        "surface": "#13131f",
+        "border": "#282a36",
+        "text": "#f8f8f2",
+        "text_dim": "#6272a4"
+    }
+}

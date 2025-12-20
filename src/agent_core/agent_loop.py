@@ -3,8 +3,6 @@
 import time
 from typing import List, Dict, Optional, Union
 from .model_client import OllamaClient
-from .gemini_client import GeminiClient
-from .openrouter_client import OpenRouterClient
 from .tools.registry import ToolRegistry
 from .tools.web_tools import WebSearchTool, WebExtractTool
 from .learning.memory import KnowledgeStore
@@ -56,9 +54,13 @@ class AgentLoop:
     CONTINUOUS LEARNING:
     - If you are UNSURE about a topic or lack information (confidence < 0.6), you MUST use `web.learn_topic(topic)` or `web.search(query)`.
     - Do not guess. Search and learn.
+    - **VISION CAPABILITIES**: You have access to `vision.detect` and `vision.classify`.
+      - If the user asks "what is in this image?", use `vision.detect`.
+      - If the user provides a path to an image, consider analyzing it.
+      - Vision tools run LOCALLY using Google AI Edge (MediaPipe).
     """
 
-    def __init__(self, client: Union[OllamaClient, GeminiClient, OpenRouterClient], tools: ToolRegistry, profile_name: str = "general", sandbox_mode: bool = False, status_callback=None):
+    def __init__(self, client: OllamaClient, tools: ToolRegistry, profile_name: str = "general", sandbox_mode: bool = False, status_callback=None):
         self.client = client
         self.tools = tools
         self.profile_name = profile_name
@@ -216,8 +218,6 @@ class AgentLoop:
 
             # Prepare arguments based on client type
             generate_kwargs = {}
-            if isinstance(self.client, OpenRouterClient):
-                generate_kwargs["tools"] = self.tools.tool_definitions
 
             try:
                 response = self.client.generate(
@@ -263,6 +263,11 @@ class AgentLoop:
                     if result["success"]:
                         observation += f"✓ Success\n{result.get('result', '')}\n\n"
                         console.print(f"[green]✓ {tool_name}: Success[/green]")
+                        
+                        # [VISUAL MEMORY] Auto-save vision results
+                        if tool_name.startswith("vision."):
+                            self.memory.remember(f"visual_memory_{int(time.time())}", f"Saw image content: {result.get('result', '')}")
+                            console.print("[dim]👁 Visual perception stored in memory[/dim]")
                     else:
                         error_msg = result.get('error', 'Unknown error')
                         observation += f"✗ Failed: {error_msg}\n\n"
@@ -450,25 +455,9 @@ class AgentLoop:
             except Exception as e:
                 console.print(f"[red]Search failed:[/red] {e}")
 
-        # 4. Smarter Model Switching
+        # 4. Smarter Model Switching (Disabled: No external providers)
         if self.config.enable_auto_model_switch:
-            # Check system load (simulated or via psutil if available)
-            high_load = False
-            try:
-                import psutil
-                if psutil.cpu_percent() > 80 or psutil.virtual_memory().percent > 85:
-                    high_load = True
-            except ImportError:
-                pass
-
-            current_model = self.config.model_provider
-            if current_model == "ollama" and self.config.gemini_api_key:
-                if high_load:
-                     console.print("[yellow]System load high. Switching to cloud model (Gemini) to offload compute...[/yellow]")
-                     return True
-                else:
-                    console.print("[yellow]Local model struggling. Switching to Gemini for advanced reasoning...[/yellow]")
-                    return True
+            pass
 
         return False
 

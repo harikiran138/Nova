@@ -9,6 +9,7 @@ from .chat_window import ChatWindow
 from .input_box import InputBox
 from .status_bar import StatusBar
 from .widgets.command_palette import CommandPalette
+from .widgets.dashboard_widgets import SystemMonitor, VisionPanel, MemoryStream
 from .asciilogo import LOGO
 
 from src.agent_core.config import Config
@@ -38,7 +39,14 @@ class NovaApp(App):
         # Initialize Agent
         self.client = OllamaClient(config.ollama_base_url, config.ollama_model)
         self.tools = ToolRegistry(config.workspace_dir, config.allow_shell_commands, config.shell_command_allowlist)
-        self.agent = AgentLoop(self.client, self.tools, profile_name, sandbox_mode)
+        # Pass status callback to agent
+        self.agent = AgentLoop(
+            self.client, 
+            self.tools, 
+            profile_name, 
+            sandbox_mode,
+            status_callback=self.handle_agent_event
+        )
         
         # Load User Profile
         self.user_profile = self.config.load_user_profile()
@@ -58,10 +66,11 @@ class NovaApp(App):
                 yield ChatWindow(id="chat_window")
                 yield InputBox(id="input_box")
             
-            # Right Column: Tools (Placeholder for now)
-            with Vertical(classes="panel", id="tool_panel"):
-                yield Static("Active Tools", classes="header")
-                yield Static("File System\nGit\nSystem", classes="tool-list")
+            # Right Column: Intelligence Hub
+            with Vertical(id="dashboard_column"):
+                yield SystemMonitor(id="system_monitor")
+                yield VisionPanel(id="vision_panel")
+                yield MemoryStream(id="memory_stream")
             
         yield StatusBar(id="status_bar")
         yield Footer()
@@ -78,6 +87,45 @@ class NovaApp(App):
         sb.tools_count = len(self.agent.active_tool_names)
         sb.sandbox_active = self.sandbox_mode
         sb.turbo_active = self.config.turbo_mode
+        sb.vision_active = "ai-edge-litert" in str(self.agent.memory.vector_store.embedder) if hasattr(self.agent, "memory") and hasattr(self.agent.memory, "vector_store") else False
+        sb.acceleration = "Metal/XNNPACK" if sb.vision_active else "CPU"
+        
+        # Also update System Monitor if mounted
+        try:
+            mon = self.query_one(SystemMonitor)
+            mon.accel_type = sb.acceleration
+        except: pass
+
+    def handle_agent_event(self, event_type: str, *args):
+        """Callback from AgentLoop."""
+        try:
+            mem_stream = self.query_one(MemoryStream)
+            vision_panel = self.query_one(VisionPanel)
+            
+            if event_type == "tool_start":
+                tool_name, tool_args = args
+                mem_stream.add_entry(f"🔧 Invoking: {tool_name}")
+                if tool_name.startswith("vision."):
+                    vision_panel.last_image = tool_args.get("image_path", "unknown")
+                    
+            elif event_type == "tool_end":
+                tool_name, result = args
+                if result.get("success"):
+                    mem_stream.add_entry(f"✓ {tool_name} completed.")
+                    if tool_name.startswith("vision."):
+                        vision_panel.analysis = result.get("result", "")[:100] + "..."
+                else:
+                    mem_stream.add_entry(f"✗ {tool_name} failed: {result.get('error')}")
+                    
+            elif event_type == "thinking_start":
+                mem_stream.add_entry("🧠 Thinking...")
+            
+            elif event_type == "thinking_end":
+                pass
+                
+        except Exception:
+            # UI might not be ready
+            pass
 
     def action_cycle_theme(self):
         """Switch to next theme."""

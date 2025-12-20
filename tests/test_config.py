@@ -22,7 +22,7 @@ class TestConfig(unittest.TestCase):
         config = Config.from_env()
         
         self.assertEqual(config.ollama_base_url, "http://127.0.0.1:11434")
-        self.assertEqual(config.ollama_model, "llama3")
+        self.assertEqual(config.ollama_model, "mannix/llama3.1-8b-abliterated")
         self.assertTrue(config.allow_shell_commands)
         self.assertTrue(config.workspace_dir.name, "workspace")
 
@@ -41,20 +41,29 @@ class TestConfig(unittest.TestCase):
         config = Config(
             ollama_base_url="http://localhost:11434",
             ollama_model="llama3",
+            ollama_embedding_model="all-minilm",
+            model_provider="ollama",
             workspace_dir=Path("."),
             allow_shell_commands=True,
-            shell_command_allowlist=[]
+            shell_command_allowlist=[],
+            mongodb_uri="mongodb://localhost:27017",
+            mongodb_db_name="test_db",
+            mongodb_collection_name="test_coll"
         )
         errors = config.validate()
         self.assertEqual(len(errors), 0)
 
-    def test_validate_invalid_url(self):
         config = Config(
             ollama_base_url="invalid-url",
             ollama_model="llama3",
+            ollama_embedding_model="all-minilm",
+            model_provider="ollama",
             workspace_dir=Path("."),
             allow_shell_commands=True,
-            shell_command_allowlist=[]
+            shell_command_allowlist=[],
+            mongodb_uri="mongodb://localhost:27017",
+            mongodb_db_name="test_db",
+            mongodb_collection_name="test_coll"
         )
         errors = config.validate()
         self.assertEqual(len(errors), 1)

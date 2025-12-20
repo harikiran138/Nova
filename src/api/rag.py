@@ -8,30 +8,13 @@ from langchain.prompts import PromptTemplate
 from src.agent_core.config import Config
 from src.api.database import get_collection
 
-# Optional import for Gemini
-try:
-    from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
-    HAS_GOOGLE_GENAI = True
-except ImportError:
-    HAS_GOOGLE_GENAI = False
-
 def get_embeddings():
     config = Config.from_env()
-    if config.model_provider == "gemini" and config.gemini_api_key and HAS_GOOGLE_GENAI:
-        return GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=config.gemini_api_key)
-    else:
-        if config.gemini_api_key and not HAS_GOOGLE_GENAI:
-            print("Warning: Google GenAI not available, falling back to Ollama")
-        return OllamaEmbeddings(base_url=config.ollama_base_url, model=config.ollama_embedding_model)
+    return OllamaEmbeddings(base_url=config.ollama_base_url, model=config.ollama_embedding_model)
 
 def get_llm():
     config = Config.from_env()
-    if config.model_provider == "gemini" and config.gemini_api_key and HAS_GOOGLE_GENAI:
-        return ChatGoogleGenerativeAI(model=config.gemini_model, google_api_key=config.gemini_api_key)
-    else:
-        if config.gemini_api_key and not HAS_GOOGLE_GENAI:
-            print("Warning: Google GenAI not available, falling back to Ollama")
-        return ChatOllama(base_url=config.ollama_base_url, model=config.ollama_model)
+    return ChatOllama(base_url=config.ollama_base_url, model=config.ollama_model)
 
 from langchain_chroma import Chroma
 import os

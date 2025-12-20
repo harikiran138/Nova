@@ -20,11 +20,7 @@ class Config:
     ollama_base_url: str
     ollama_model: str
     ollama_embedding_model: str
-    gemini_api_key: str
-    gemini_model: str
-    openrouter_api_key: str
-    openrouter_model: str
-    model_provider: str # 'ollama', 'gemini', 'openrouter'
+    model_provider: str # 'ollama'
     mongodb_uri: str
     mongodb_db_name: str
     mongodb_collection_name: str
@@ -98,10 +94,6 @@ class Config:
             ollama_base_url=os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434"),
             ollama_model=os.getenv("OLLAMA_MODEL", "mannix/llama3.1-8b-abliterated"),
             ollama_embedding_model=os.getenv("OLLAMA_EMBEDDING_MODEL", "all-minilm"),
-            gemini_api_key=os.getenv("GEMINI_API_KEY", ""),
-            gemini_model=os.getenv("GEMINI_MODEL", "gemini-2.0-flash-lite-preview-02-05"),
-            openrouter_api_key=os.getenv("OPENROUTER_API_KEY", ""),
-            openrouter_model=os.getenv("OPENROUTER_MODEL", "openai/gpt-3.5-turbo"),
             model_provider=os.getenv("MODEL_PROVIDER", "ollama"),
             workspace_dir=workspace_dir,
             allow_shell_commands=allow_shell,

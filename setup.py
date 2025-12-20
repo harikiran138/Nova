@@ -9,6 +9,7 @@ setup(
     packages=find_packages(where="src"),
     py_modules=["nova_cli"],
     install_requires=[
+        "click>=8.0.0",
         "requests>=2.31.0",
         "rich>=13.7.0",
         "pandas>=2.0.0",
@@ -30,7 +31,6 @@ setup(
         "langchain-community>=0.0.10",
         "langchain-mongodb>=0.1.0",
         "pymongo>=4.6.0",   # MongoDB Driver
-        "langchain-google-genai>=0.0.9", # Google Gemini Integration
     ],
     entry_points={
         "console_scripts": [

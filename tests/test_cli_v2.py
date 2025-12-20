@@ -18,7 +18,7 @@ class TestCliV2(unittest.TestCase):
         # Simulate selecting the second model (qwen2)
         mock_ask.return_value = 2
         
-        selected = select_model(self.mock_client)
+        selected = select_model(self.mock_client, self.mock_config)
         self.assertEqual(selected, "qwen2")
 
     def test_slash_model(self):
@@ -30,16 +30,17 @@ class TestCliV2(unittest.TestCase):
             self.assertEqual(self.mock_config.ollama_model, "qwen2")
 
     def test_slash_clear(self):
-        handle_slash_command("/clear", self.mock_agent, self.mock_client, self.mock_config)
+        result = handle_slash_command("/clear", self.mock_agent, self.mock_client, self.mock_config)
         self.mock_agent.reset_conversation.assert_called_once()
+        self.assertEqual(result, "continue")
 
     def test_slash_quit(self):
-        should_exit = handle_slash_command("/quit", self.mock_agent, self.mock_client, self.mock_config)
-        self.assertTrue(should_exit)
+        result = handle_slash_command("/quit", self.mock_agent, self.mock_client, self.mock_config)
+        self.assertEqual(result, "exit")
 
     def test_slash_unknown(self):
-        should_exit = handle_slash_command("/unknown", self.mock_agent, self.mock_client, self.mock_config)
-        self.assertFalse(should_exit)
+        result = handle_slash_command("/unknown", self.mock_agent, self.mock_client, self.mock_config)
+        self.assertEqual(result, "continue")
 
 if __name__ == '__main__':
     unittest.main()

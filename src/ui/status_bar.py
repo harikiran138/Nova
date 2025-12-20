@@ -10,6 +10,8 @@ class StatusBar(Static):
     tools_count = reactive(0)
     sandbox_active = reactive(False)
     turbo_active = reactive(False)
+    vision_active = reactive(False)
+    acceleration = reactive("CPU")
     git_branch = reactive("main")
     
     # Styles moved to ThemeManager
@@ -27,6 +29,11 @@ class StatusBar(Static):
         if self.turbo_active:
              yield Static("⚡ TURBO", id="turbo", classes="status-item turbo-on")
         
+        if self.vision_active:
+             yield Static("👁 VISION", id="vision", classes="status-item vision-on")
+             
+        yield Static(f"🚀 {self.acceleration}", id="accel", classes="status-item")
+        
         yield Static(f"🌿 {self.git_branch}", id="git", classes="status-item")
 
     def watch_model(self, value):
@@ -42,6 +49,13 @@ class StatusBar(Static):
          # Dynamic mounting/unmounting is complex, we just toggle visibility if we rebuild structure
          # For simplicity, let's assume simple update or we'd need to re-compose
          pass
+
+    def watch_vision_active(self, value):
+         # Typically requires re-compose or we just use style.display, but for now placeholder
+         pass
+
+    def watch_acceleration(self, value):
+        if self.is_mounted: self.query_one("#accel", Static).update(f"🚀 {value}")
 
     def watch_sandbox_active(self, value):
         if self.is_mounted:

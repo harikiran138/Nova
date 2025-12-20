@@ -3,7 +3,8 @@ import shutil
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-from src.agent_core.tools import ToolRegistry, parse_tool_call
+from src.agent_core.tools import ToolRegistry
+from src.agent_core.tools_parsing import parse_tool_calls
 
 class TestTools(unittest.TestCase):
     def setUp(self):
@@ -12,7 +13,8 @@ class TestTools(unittest.TestCase):
         self.registry = ToolRegistry(
             workspace_dir=self.workspace_dir,
             allow_shell=True,
-            shell_allowlist=["ls", "echo"]
+            shell_allowlist=["ls", "echo"],
+            sandbox_mode=True
         )
 
     def tearDown(self):
@@ -38,7 +40,7 @@ class TestTools(unittest.TestCase):
             "content": "hack"
         })
         self.assertFalse(result["success"])
-        self.assertIn("must be within workspace", result["error"])
+        self.assertIn("Access denied", result["error"])
 
     def test_shell_run_allowed(self):
         result = self.registry.execute("shell.run", {"command": "echo 'hello'"})
@@ -48,22 +50,26 @@ class TestTools(unittest.TestCase):
     def test_shell_run_disallowed(self):
         result = self.registry.execute("shell.run", {"command": "whoami"})
         self.assertFalse(result["success"])
-        self.assertIn("not in allowlist", result["error"])
+        self.assertIn("not in allowlist", result.get("error", ""))
 
-    @patch("src.agent_core.tools.requests.get")
+    @patch("src.agent_core.tools.core_tools.requests.Session.get")
     def test_web_get(self, mock_get):
         mock_response = MagicMock()
         mock_response.text = "<html><body>Test Content</body></html>"
         mock_response.raise_for_status.return_value = None
         mock_get.return_value = mock_response
 
-        result = self.registry.execute("web.get", {"url": "http://example.com"})
+        # Need to disable offline_mode for this test since we are mocking requests
+        self.registry.net_tools_instance.offline_mode = False
+        result = self.registry.execute("net.get", {"url": "http://example.com"})
         self.assertTrue(result["success"])
         self.assertIn("Test Content", result["result"])
 
     def test_parse_tool_call(self):
         text = 'Some text {"tool": "file.read", "args": {"path": "test.txt"}} more text'
-        result = parse_tool_call(text)
+        results = parse_tool_calls(text)
+        self.assertEqual(len(results), 1)
+        result = results[0]
         self.assertEqual(result["tool"], "file.read")
         self.assertEqual(result["args"]["path"], "test.txt")
 

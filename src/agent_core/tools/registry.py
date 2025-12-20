@@ -22,27 +22,31 @@ class ToolWrapper:
 class ToolRegistry:
     """Registry for agent tools."""
     
-    def __init__(self, workspace_dir: Path, allow_shell: bool = False, shell_allowlist: List[str] = None, offline_mode: bool = True):
+    def __init__(self, workspace_dir: Path, allow_shell: bool = False, shell_allowlist: List[str] = None, offline_mode: bool = True, sandbox_mode: bool = False):
         self.workspace_dir = workspace_dir
         self.allow_shell = allow_shell
         self.shell_allowlist = shell_allowlist or []
         self.offline_mode = offline_mode
+        self.sandbox_mode = sandbox_mode
         self.tools: Dict[str, ToolWrapper] = {}
         
         # Initialize Memory
         self.memory_manager = MemoryManager(workspace_dir / ".nova" / "memory")
         
         # Initialize Tool Sets
-        self.file_tools_instance = FileTool(workspace_dir)
+        self.file_tools_instance = FileTool(workspace_dir, sandbox_mode=self.sandbox_mode)
         self.git_tools_instance = GitTool(workspace_dir)
         self.net_tools_instance = NetTool(offline_mode=self.offline_mode)
         self.sys_tools_instance = SysTool()
-        self.shell_tools_instance = ShellTool(workspace_dir)
+        self.shell_tools_instance = ShellTool(workspace_dir, allow_shell=self.allow_shell, allowlist=self.shell_allowlist)
         self.kali_tools_instance = KaliTool(workspace_dir)
         self.mem_tools_instance = MemoryTool(self.memory_manager)
         self.api_tools_instance = ApiTool()
         self.installer_tools_instance = SystemInstallerTool()
         self.docker_tools_instance = DockerHubTool()
+        
+        from .vision_tools import VisionTool
+        self.vision_tool_instance = VisionTool()
         
         from .web_tools import WebSearchTool
         self.web_search_tool_instance = WebSearchTool()
@@ -71,6 +75,11 @@ class ToolRegistry:
         self.register("docker.list", lambda **k: self.docker_tools_instance.run_action("list", k), "List Docker images")
         self.register("docker.compose_up", lambda **k: self.docker_tools_instance.run_action("compose_up", k), "Start Docker Compose stack")
         self.register("docker.compose_down", lambda **k: self.docker_tools_instance.run_action("compose_down", k), "Stop Docker Compose stack")
+
+        # Vision Tools
+        self.register("vision.detect", lambda **k: self.vision_tool_instance.execute({"action": "detect", **k}), "Detect objects in an image")
+        self.register("vision.classify", lambda **k: self.vision_tool_instance.execute({"action": "classify", **k}), "Classify image content")
+
 
         
         self._load_plugins()
