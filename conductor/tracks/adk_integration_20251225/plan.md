@@ -4,7 +4,7 @@
 - [x] Task: Define standard ADK Base Classes and Interfaces [5c3d9a3]
     - [ ] Write Tests
     - [ ] Implement Feature
-- [ ] Task: Implement Auto-discovery mechanism for local ADK plugins
+- [x] Task: Implement Auto-discovery mechanism for local ADK plugins [8c62dd1]
     - [ ] Write Tests
     - [ ] Implement Feature
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: ADK Foundation' (Protocol in workflow.md)
