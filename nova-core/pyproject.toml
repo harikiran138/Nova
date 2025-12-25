@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nova-core"
+version = "0.1.0"
+description = "Core agent engine for Nova v2"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.0.0",
+    "requests>=2.31.0",
+    "sqlalchemy>=2.0.0",
+    "rich>=13.0.0",
+    "tenacity>=8.0.0"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["nova_core*"]
