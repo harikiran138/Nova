@@ -9,17 +9,17 @@
     - [x] Implement Feature
 - [x] Task: Conductor - User Manual Verification 'Phase 1: ADK Foundation' (Protocol in workflow.md) [checkpoint: 1d2a20f]
 
-## Phase 2: Local Knowledge Base Integration
+## Phase 2: Local Knowledge Base Integration [checkpoint: 1c381b3]
 - [x] Task: Implement SQLite/Vector Store connector for local knowledge [0e51e6c]
-    - [ ] Write Tests
-    - [ ] Implement Feature
+    - [x] Write Tests
+    - [x] Implement Feature
 - [x] Task: Create Knowledge Indexing tool for project analysis [5f2b527]
-    - [ ] Write Tests
-    - [ ] Implement Feature
+    - [x] Write Tests
+    - [x] Implement Feature
 - [x] Task: Integrate Knowledge Lookup into the ReAct Loop [de9b076]
-    - [ ] Write Tests
-    - [ ] Implement Feature
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Knowledge Integration' (Protocol in workflow.md)
+    - [x] Write Tests
+    - [x] Implement Feature
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Knowledge Integration' (Protocol in workflow.md) [checkpoint: 1c381b3]
 
 ## Phase 3: Cyberpunk TUI & Decision Tree Visualization
 - [ ] Task: Refactor UI to support multi-pane Cyberpunk layouts
