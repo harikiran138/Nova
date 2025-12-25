@@ -32,6 +32,7 @@ console = Console(theme=neural_theme, width=100)
 from src.nova_shared.config import Config
 from src.nova_ai.model_client import OllamaClient
 from src.nova_agents.agent_loop import AgentLoop
+from src.nova_agents.tools.registry import ToolRegistry
 
 def get_client(config: Config):
     """Get the appropriate model client based on config."""
@@ -251,6 +252,36 @@ def run_interactive(config: Config, profile_name: str = "general", sandbox_mode:
             console.print(f"[red]Error: {e}[/red]")
 
 
+
+def get_telemetry_snapshot(config: Config):
+    from src.nova_ops.telemetry import TelemetryManager
+    tm = TelemetryManager(config.workspace_dir / ".nova" / "telemetry.json")
+    # Return raw metrics for easier calculation
+    return tm.metrics.copy()
+
+def print_performance_summary(start_metrics: dict, end_metrics: dict, duration: float):
+    """Print a sleek performance summary of the session."""
+    
+    # Calculate Deltas
+    tokens_used = end_metrics.get("total_tokens", 0) - start_metrics.get("total_tokens", 0)
+    cost = end_metrics.get("total_cost", 0.0) - start_metrics.get("total_cost", 0.0)
+    
+    # Don't show if empty run
+    if tokens_used == 0 and cost == 0:
+        return
+
+    summary = Table(box=None, show_header=False, padding=(0, 2))
+    summary.add_column("Metric", style="dim")
+    summary.add_column("Value", style="bold cyan")
+    
+    summary.add_row("⏱ Duration", f"{duration:.2f}s")
+    summary.add_row("🪙 CostEstimate", f"${cost:.4f}")
+    summary.add_row("💎 Tokens", f"{tokens_used}")
+    
+    console.print()
+    console.print(Panel(summary, title="[info]Performance Stats[/info]", border_style="dim", expand=False))
+
+
 def run_oneshot(config: Config, command: str):
     """Run a single command and exit."""
     # Initialize components
@@ -272,11 +303,22 @@ def run_oneshot(config: Config, command: str):
     # Process command
     try:
         console.print(f"[bold blue]You:[/bold blue] {command}\n")
+        
+        # Performance Tracking
+        start_metrics = get_telemetry_snapshot(config)
+        start_time = time.time()
+        
         response = agent.process_input(command)
+        
+        end_time = time.time()
+        end_metrics = get_telemetry_snapshot(config)
         
         if response:
             console.print("\n[bold green]Nova:[/bold green]")
             console.print(Panel(Markdown(response), border_style="green", padding=(1, 2)))
+            
+            # Print Summary
+            print_performance_summary(start_metrics, end_metrics, end_time - start_time)
         else:
             console.print("[red]Failed to get response.[/red]")
             sys.exit(1)
@@ -431,11 +473,22 @@ def run(goal, agent, sandbox, resume):
         if not agent_loop.load_session(resume):
             return
 
-    if config.reasoning_mode == "planner":
-        console.print("[bold cyan]🧠 PVEV Reasoning Mode Activated[/bold cyan]")
-        agent_loop.execute_pvev_session(goal)
-    else:
-        agent_loop.process_input(goal)
+    # Track Performance
+    start_metrics = get_telemetry_snapshot(config)
+    start_time = time.time()
+    
+    try:
+        if config.reasoning_mode == "planner":
+            console.print("[bold cyan]🧠 PVEV Reasoning Mode Activated[/bold cyan]")
+            agent_loop.execute_pvev_session(goal)
+        else:
+            agent_loop.process_input(goal)
+            
+    finally:
+        # Show stats even if it crashes
+        end_time = time.time()
+        end_metrics = get_telemetry_snapshot(config)
+        print_performance_summary(start_metrics, end_metrics, end_time - start_time)
 
 @cli.command()
 def history():
@@ -571,6 +624,7 @@ def self_analyze():
     
     tokens = stats.get("tokens", {})
     t_table.add_row("Total Tokens", str(tokens.get("total", 0)))
+    t_table.add_row("Est. Cost", stats.get("cost", "$0.0000"))
     
     cache = stats.get("cache", {})
     hits = cache.get("hits", 0)

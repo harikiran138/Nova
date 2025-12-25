@@ -53,6 +53,7 @@ class TelemetryManager:
                 "prompt": self.metrics.get("prompt_tokens", 0),
                 "completion": self.metrics.get("completion_tokens", 0)
             },
+            "cost": f"${self.metrics.get('total_cost', 0.0):.4f}",
             "cache": {
                 "hits": self.metrics.get("cache_hits", 0),
                 "misses": self.metrics.get("cache_misses", 0)
