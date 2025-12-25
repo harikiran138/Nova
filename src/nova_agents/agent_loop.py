@@ -318,6 +318,7 @@ class AgentLoop:
         self.conversation_history.append({"role": "user", "content": user_input})
         self.trajectory_logger.log_step("input", {"content": user_input})
         
+        start_ts = time.time()
         iteration = 0
         while iteration < max_iterations:
             iteration += 1
@@ -432,9 +433,13 @@ class AgentLoop:
                 self.conversation_history.append({"role": "assistant", "content": response})
                 self.trajectory_logger.log_step("response", {"content": response})
                 self.save_state()
+                # Log success task
+                duration = (time.time() - start_ts) * 1000
+                self.telemetry.log_task(success=True, duration_ms=duration)
                 return response
                 
         self.trajectory_logger.finalize(success=False, metadata={"reason": "max_iterations"})
+        self.telemetry.log_task(success=False, duration_ms=(time.time() - start_ts) * 1000)
         return "Max iterations reached."
 
     def _consensus_check(self, plan: str) -> bool:
