@@ -1,10 +1,10 @@
 # Nova Agent CLI v2.0 🚀
 
-**Nova is a local-first, uncensored, high-performance AI agent for engineers** — built for coding, research, and DevOps automation **without cloud lock-in or data leakage**.
+**Nova is an industrial-grade, local-first autonomous AI agent designed for power users.** It prioritizes privacy, uncensored operation, and "clean and work it perfect" reliability. Nova interacts with the user through a highly aesthetic, Cyberpunk-themed Terminal User Interface (TUI) and uses a sophisticated ReAct (Reason-Act-Observe) loop to execute complex tasks autonomously.
 
 Unlike cloud agents, Nova runs fully on your machine with Ollama, giving you:
 ✔ **Near-zero latency** – Local inference with no network round-trips
-✔ **Zero API cost** – Run 7B–70B+ models locally depending on your hardware
+✔ **Zero API cost** – Run 7B–70B+ models locally
 ✔ **Zero data exfiltration** - Your code never leaves your device
 
 ---
@@ -12,7 +12,6 @@ Unlike cloud agents, Nova runs fully on your machine with Ollama, giving you:
 ## 🎯 Who Nova Is For
 
 Nova is built for:
-
 - 🧑‍💻 **Software Engineers** – Refactoring, debugging, and code generation
 - 🔧 **DevOps / SREs** – Docker management, CI/CD, and infra automation
 - 🧪 **Researchers** – Local experimentation without data leaks
@@ -21,11 +20,13 @@ Nova is built for:
 
 ## ✨ Key Features
 
-- **🧠 Agentic Intelligence**: Advanced ReAct loop for complex problem solving.
-- **⚡ Turbo Mode**: Multi-threaded tool execution for maximum performance (Configurable workers).
+- **🧠 Agentic Intelligence**: Advanced ReAct loop for complex problem-solving and autonomous debugging.
+- **⚡ Turbo Mode**: Multi-threaded tool execution for maximum performance.
 - **🐳 Cloud-Ready Docker**: Deploy as a full stack (Agent + Ollama) anywhere.
 - **🕵️ 100% Private**: No telemetry, no external API calls.
-- **🖥️ Matrix Interface**: Beautiful TUI with real-time status and visuals.
+- **🖥️ Cyberpunk TUI**: A highly aesthetic, interactive terminal interface with real-time Plan Tree visualization.
+- **📚 Local Knowledge**: Integrated ChromaDB vector store for long-term memory.
+- **🛠️ Agent Developer Kit (ADK)**: Extensible toolkit for adding custom capabilities.
 
 ## 🧠 Agent Architecture
 
