@@ -58,15 +58,15 @@ def run_matrix_rain(duration: int = 5):
                         pass
 
             # Optimized approach for Python performance:
-            # Generate random lines with green characters
+            # Generate random lines with cyan characters
             output_lines = []
             for _ in range(height):
                 line = ""
                 for _ in range(width):
                     if random.random() < 0.05:
-                        line += f"[bright_green]{random.choice(chars)}[/bright_green]"
+                        line += f"[bold #00F5FF]{random.choice(chars)}[/bold #00F5FF]"
                     elif random.random() < 0.1:
-                        line += f"[green]{random.choice(chars)}[/green]"
+                        line += f"[#00F5FF dim]{random.choice(chars)}[/#00F5FF dim]"
                     else:
                         line += " "
                 output_lines.append(line)
@@ -143,14 +143,13 @@ def run_pulse(text: str = "NOVA", duration: int = 5):
     
     with Live(console=console, refresh_per_second=10, transient=True) as live:
         while time.time() - start_time < duration:
+            # Shift to Cyan/Violet pulse
             for i in range(0, 101, 5): # Fade in
-                color = f"rgb({int(2.55*i)},{int(2.55*i)},255)"
-                live.update(Panel(f"[{color}]{text}[/{color}]", border_style=color))
+                live.update(Panel(f"[bold #00F5FF]{text}[/bold #00F5FF]", border_style="#8B5CF6"))
                 time.sleep(0.05)
             
             for i in range(100, -1, -5): # Fade out
-                color = f"rgb({int(2.55*i)},{int(2.55*i)},255)"
-                live.update(Panel(f"[{color}]{text}[/{color}]", border_style=color))
+                live.update(Panel(f"[dim #00F5FF]{text}[/dim #00F5FF]", border_style="#8B5CF6 dim"))
                 time.sleep(0.05)
 
 def run_system_scan(duration: int = 5):

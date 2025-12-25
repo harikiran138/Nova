@@ -1,8 +1,7 @@
 #!/bin/bash
 # Nova Agent Wrapper Script
 
-# Resolve the directory where this script is located (bin/)
-# Use readlink to resolve symlinks if needed
+# Resolve the directory where this script is located
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do 
   DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
@@ -12,22 +11,23 @@ done
 SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
-# Activate virtual environment
+# Check for virtual environment
 if [ -f "$PROJECT_ROOT/.venv/bin/activate" ]; then
-    source "$PROJECT_ROOT/.venv/bin/activate"
+    VENV_PYTHON="$PROJECT_ROOT/.venv/bin/python3"
 else
     echo "❌ Virtual environment not found at $PROJECT_ROOT/.venv"
-    echo "Please run install.sh in the project root first."
+    echo "Please run: python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && pip install -e ."
     exit 1
 fi
 
-# Set PYTHONPATH to include project root
+# Set PYTHONPATH to include project root so 'import src.xxx' works
 export PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH"
 
-# Load .env from project root if it exists (for defaults like OLLAMA_BASE_URL)
+# Load .env if it exists
 if [ -f "$PROJECT_ROOT/.env" ]; then
+    # Filter out comments and empty lines, then export
     export $(grep -v '^#' "$PROJECT_ROOT/.env" | xargs)
 fi
 
-# Run the CLI, passing all arguments
-python3 "$PROJECT_ROOT/src/nova_cli.py" "$@"
+# Run the CLI
+exec "$VENV_PYTHON" "$PROJECT_ROOT/src/nova_cli.py" "$@"

@@ -60,10 +60,11 @@ class Dashboard:
         return Panel(table, title="Configuration", border_style="blue")
 
     def get_telemetry_panel(self):
-        from ..agent_core.telemetry import TelemetryManager
-        from pathlib import Path
+        from src.nova_ops.telemetry import TelemetryManager
+        from src.nova_shared.config import Config
+        config = Config.from_env()
         
-        tm = TelemetryManager(Path.home() / ".nova" / "telemetry.json")
+        tm = TelemetryManager(config.workspace_dir / ".nova" / "telemetry.json")
         stats = tm.get_stats()
         
         table = Table(show_header=False, box=None)
@@ -73,6 +74,22 @@ class Dashboard:
         table.add_row("Success Rate", stats["success_rate"])
         table.add_row("Total Tasks", str(stats["total_tasks"]))
         table.add_row("Avg Duration", stats["avg_duration"])
+        
+        # New Metrics
+        tokens = stats.get("tokens", {})
+        cache = stats.get("cache", {})
+        
+        table.add_row("Total Tokens", str(tokens.get("total", 0)))
+        table.add_row("  Prompt", str(tokens.get("prompt", 0)))
+        table.add_row("  Compl.", str(tokens.get("completion", 0)))
+        
+        hits = cache.get("hits", 0)
+        misses = cache.get("misses", 0)
+        total_reqs = hits + misses
+        hit_rate = f"{(hits/total_reqs*100):.1f}%" if total_reqs > 0 else "0.0%"
+        
+        table.add_row("Cache Hit Rate", hit_rate)
+        table.add_row("  Hits", str(hits))
         
         return Panel(table, title="Agent Metrics", border_style="green")
 

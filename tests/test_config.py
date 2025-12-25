@@ -41,6 +41,7 @@ class TestConfig(unittest.TestCase):
         config = Config(
             ollama_base_url="http://localhost:11434",
             ollama_model="llama3",
+            gemini_model="gemini-1.5-pro",
             ollama_embedding_model="all-minilm",
             model_provider="ollama",
             workspace_dir=Path("."),
@@ -56,6 +57,7 @@ class TestConfig(unittest.TestCase):
         config = Config(
             ollama_base_url="invalid-url",
             ollama_model="llama3",
+            gemini_model="gemini-1.5-pro",
             ollama_embedding_model="all-minilm",
             model_provider="ollama",
             workspace_dir=Path("."),

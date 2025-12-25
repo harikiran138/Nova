@@ -6,27 +6,44 @@ import time
 from pathlib import Path
 import click
 from rich.console import Console
+from rich.theme import Theme
 from rich.panel import Panel
 from rich.prompt import Prompt, IntPrompt
 from rich.markdown import Markdown
 from rich.table import Table
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Neural Glass Aesthetic Theme
+neural_theme = Theme({
+    "nova": "bold #00F5FF",        # Neon Cyan
+    "accent": "#8B5CF6",           # Neon Violet
+    "success": "#22C55E",          # Signal Green
+    "error": "#EF4444",            # Alert Red
+    "info": "#00F5FF dim",         # Muted Cyan
+    "dim": "#6B7280",              # Muted Gray
+    "user": "bold #8B5CF6",        # User prompt accent
+    "prompt.path": "#6B7280",
+    "prompt.nova": "#00F5FF",
+    "prompt.arrow": "#8B5CF6"
+})
 
-from src.agent_core import Config, OllamaClient, AgentLoop
-from src.agent_core.tools import ToolRegistry
+console = Console(theme=neural_theme, width=100)
 
-console = Console()
+# Core Imports
+from src.nova_shared.config import Config
+from src.nova_ai.model_client import OllamaClient
+from src.nova_agents.agent_loop import AgentLoop
 
 def get_client(config: Config):
     """Get the appropriate model client based on config."""
+    if config.model_provider == "gemini":
+        from src.nova_ai.model_client import GeminiClient
+        return GeminiClient(config.gemini_api_key, config.gemini_model)
     return OllamaClient(config.ollama_base_url, config.ollama_model)
 
 def print_welcome(config: Config, client):
     """Print welcome message with configuration info."""
     import random
-    from src.agent_core.tools import ToolRegistry
+    from src.nova_agents.tools.registry import ToolRegistry
     
     tips = [
         "Type /help to see available commands.",
@@ -41,34 +58,36 @@ def print_welcome(config: Config, client):
     registry = ToolRegistry(config.workspace_dir, sandbox_mode=config.security_mode)
     tool_count = len(registry.tools)
     
-    console.print(Panel.fit(
-        "[bold blue]✨ Nova — Autonomous Local Agent[/bold blue]\n"
-        "[dim]No cloud. No tracking. Fully private.[/dim]\n\n"
-        "System Status:\n"
-        "  • [bold green]Identity:[/bold green] Nova v3.0 (Enhanced)\n"
-        f"  • [bold green]Mode:[/bold green] {config.safety_level.upper()}\n"
-        f"  • [bold green]Tools:[/bold green] {tool_count} enabled\n"
-        f"  • [bold green]Workspace:[/bold green] {config.workspace_dir}\n\n"
-        "[yellow]Tip:[/yellow] Type 'help' to see available commands or 'dashboard' for metrics.\n\n"
-        "[dim]Nova Privacy Policy: All actions executed locally unless explicitly allowed.[/dim]",
-        border_style="blue"
-    ))
+    # Premium Welcome Banner - Cyberpunk Clean
+    banner = f"""
+[nova]╭────────────────────────────────────────────────────────────╮[/nova]
+[nova]│[/nova]  [bold #00F5FF]✨ Nova[/bold #00F5FF] — [accent]Autonomous Local Intelligence[/accent]          [nova]│[/nova]
+[nova]│[/nova]  [dim]No cloud. No tracking. Pure local cognition.[/dim]           [nova]│[/nova]
+[nova]├────────────────────────────────────────────────────────────┤[/nova]
+[nova]│[/nova]  [success]•[/success] [bold]Identity:[/bold]  Nova v3.5 (Neural Glass)              [nova]│[/nova]
+[nova]│[/nova]  [success]•[/success] [bold]Status:[/bold]    [success]ONLINE[/success] ([info]{config.safety_level.upper()}[/info])         [nova]│[/nova]
+[nova]│[/nova]  [success]•[/success] [bold]Ecosystem:[/bold] {tool_count} cognitive tools available     [nova]│[/nova]
+[nova]│[/nova]  [success]•[/success] [bold]Workspace:[/bold] [dim]{config.workspace_dir.name}/...[/dim]               [nova]│[/nova]
+[nova]╰────────────────────────────────────────────────────────────╯[/nova]
+    """
+    console.print(banner)
+    console.print(f"[dim]Tip: {tip}[/dim]\n")
 
 
 def select_model(client, config: Config) -> str:
     """Interactive model selection."""
 
     # Ollama Logic
-    console.print("[dim]Fetching available models...[/dim]")
+    console.print("[dim]Accessing neural models...[/dim]")
     models = client.get_available_models()
     
     if not models:
-        console.print("[red]No models found. Please pull a model using 'ollama pull <model>'[/red]")
+        console.print("[error]✖ No cognitive models found.[/error]")
         return client.model
     
-    table = Table(title="Available Models")
-    table.add_column("#", style="cyan", justify="right")
-    table.add_column("Model Name", style="green")
+    table = Table(title="Neural Model Inventory", border_style="accent")
+    table.add_column("#", style="info", justify="right")
+    table.add_column("Model Identifier", style="nova")
     
     for idx, model in enumerate(models, 1):
         table.add_row(str(idx), model)
@@ -77,12 +96,12 @@ def select_model(client, config: Config) -> str:
     
     choices = [str(i) for i in range(1, len(models) + 1)]
     try:
-        selection = IntPrompt.ask("Select a model", choices=choices)
+        selection = IntPrompt.ask("[nova]Select model ID[/nova]", choices=choices)
         selected_model = models[selection - 1]
-        console.print(f"[green]Selected model: {selected_model}[/green]")
+        console.print(f"[success]✔ Switched to {selected_model}[/success]")
         return selected_model
     except (ValueError, IndexError):
-        console.print("[red]Invalid selection[/red]")
+        console.print("[error]✖ Invalid neural mapping.[/error]")
         return client.model
 
 
@@ -144,8 +163,9 @@ def run_interactive(config: Config, profile_name: str = "general", sandbox_mode:
     
     # Startup Animation
     from src.utils.animations import run_system_scan
-    console.print("[dim]Initializing Nova Core...[/dim]")
-    run_system_scan(duration=2)
+    if not config.skip_animations:
+        console.print("[dim]Initializing Nova Core...[/dim]")
+        run_system_scan(duration=2)
     
     print_welcome(config, client)
 
@@ -163,7 +183,7 @@ def run_interactive(config: Config, profile_name: str = "general", sandbox_mode:
         nonlocal spinner
         if event == "thinking_start":
             if not spinner:
-                spinner = console.status("[bold cyan]Nova is thinking...[/bold cyan]", spinner="dots12")
+                spinner = console.status("[info]Nova is thinking...[/info]", spinner="dots12")
                 spinner.start()
         elif event == "thinking_end":
             if spinner:
@@ -172,22 +192,33 @@ def run_interactive(config: Config, profile_name: str = "general", sandbox_mode:
         elif event == "tool_start":
             if spinner: spinner.stop()
             tool_name, tool_args = args
-            console.print(f"[dim]🔧 Executing: {tool_name}[/dim]")
+            console.print(f"[dim]  ℹ Executing: {tool_name}[/dim]")
             if spinner: spinner.start()
         elif event == "tool_end":
             if spinner: spinner.stop()
             tool_name, result = args
             if result["success"]:
-                console.print(Panel(str(result.get("result", "")), title=f"✓ {tool_name}", border_style="green", expand=False))
+                console.print(f"  [success]✔[/success] [bold]{tool_name}[/bold]: [dim]Action confirmed[/dim]")
+                # Optionally show small output if relevant, but keep it clean
             else:
-                console.print(Panel(str(result.get("error", "")), title=f"✗ {tool_name}", border_style="red", expand=False))
+                console.print(f"  [error]✖[/error] [error]{tool_name}[/error]: {result.get('error', 'Critical failure')}")
             if spinner: spinner.start()
 
-    agent = AgentLoop(client, tools, profile_name=profile_name, sandbox_mode=sandbox_mode, status_callback=status_handler)
+    # Stream Handler
+    def stream_handler(chunk):
+        if chunk:
+            console.print(chunk, end="")
+
+    agent = AgentLoop(client, tools, profile_name=profile_name, sandbox_mode=sandbox_mode, status_callback=status_handler, stream_callback=stream_handler)
     
     while True:
         try:
-            user_input = console.input("\n[bold green]You>[/bold green] ").strip()
+            # Custom prompt styling
+            path = Path.cwd().name
+            prompt_header = f"[prompt.nova]╭─ nova@core[/prompt.nova] [dim]▸[/dim] [prompt.path]~/{path}[/prompt.path]"
+            console.print(prompt_header)
+            user_input = console.input("[prompt.nova]╰─[/prompt.nova] [prompt.arrow]❯[/prompt.arrow] ").strip()
+            
             if not user_input:
                 continue
                 
@@ -196,28 +227,22 @@ def run_interactive(config: Config, profile_name: str = "general", sandbox_mode:
                 if action == "exit":
                     break
                 elif action == "reload":
-                    # Re-initialize client and agent with new config
                     client = get_client(config)
-                    agent = AgentLoop(client, tools, profile_name=profile_name, sandbox_mode=sandbox_mode, status_callback=status_handler)
+                    agent = AgentLoop(client, tools, profile_name=profile_name, sandbox_mode=sandbox_mode, status_callback=status_handler, stream_callback=stream_handler)
                     print_welcome(config, client)
                 continue
             
             if user_input.lower() in ['exit', 'quit']:
-                console.print("[yellow]Goodbye![/yellow]")
+                console.print("[dim]Disconnecting...[/dim]")
                 break
             
-            console.print()  # Empty line for spacing
+            console.print(f"\n[nova]Nova[/nova] [dim]▸[/dim] ", end="")
             response = agent.process_input(user_input)
             
-            # Stop spinner if stuck (safety)
             if spinner: spinner.stop()
-            
-            if response:
-                from src.agent_core.utils import simulate_typing
-                console.print("[bold green]Nova:[/bold green]")
-                simulate_typing(response)
-            else:
+            if not response:
                 console.print("[red]No response from agent.[/red]")
+            console.print() # Ensure newline after response
             
         except KeyboardInterrupt:
             console.print("\n[yellow]Goodbye![/yellow]")
@@ -260,8 +285,8 @@ def run_oneshot(config: Config, command: str):
         sys.exit(1)
 
 
-from src.agent_core.planner import Planner
-from src.agent_core.sandbox import Sandbox
+from src.nova_agents.planner import Planner
+from src.nova_ops.sandbox import Sandbox
 
 def run_task_command(config: Config, args):
     """Handle task commands."""
@@ -364,14 +389,16 @@ def list_agents(config: Config):
 
 def show_status(config: Config, args):
     """Show current status."""
-    console.print(Panel(f"""
-[bold]Nova Status[/bold]
-Model Provider: [cyan]Ollama[/cyan]
-Model: [cyan]{config.ollama_model}[/cyan]
-Workspace: [yellow]{config.workspace_dir}[/yellow]
-Sandbox Mode: [magenta]{'Active' if args.sandbox else 'Inactive'}[/magenta]
-Agent Profile: [green]{args.agent or 'general'}[/green]
-""", title="System Status", border_style="blue"))
+    status_info = f"""
+[nova]Nova System Protocol[/nova]
+────────────────────────────────────────
+[bold]Provider:[/bold]  [info]Ollama[/info]
+[bold]Model:[/bold]     [accent]{config.ollama_model}[/accent]
+[bold]Workspace:[/bold] [dim]{config.workspace_dir}[/dim]
+[bold]Security:[/bold]  [success]{'Enhanced Sandbox' if args.sandbox else 'Standard'}[/success]
+[bold]Profile:[/bold]   [nova]{args.agent or 'general'}[/nova]
+"""
+    console.print(Panel(status_info, title="[accent]System Metrics[/accent]", border_style="accent", expand=False))
 
 @click.group(invoke_without_command=True)
 @click.pass_context
@@ -410,7 +437,7 @@ def run(goal, agent, sandbox, resume):
 def history():
     """Show session history."""
     config = Config.from_env()
-    from src.agent_core.memory import MemoryManager
+    from src.nova_ai.memory import MemoryManager
     memory = MemoryManager(config.workspace_dir / ".nova" / "memory")
     sessions = memory.list_sessions()
     
@@ -418,10 +445,10 @@ def history():
         console.print("No history found.")
         return
         
-    table = Table(title="Nova Session History")
-    table.add_column("ID", style="cyan")
-    table.add_column("Time", style="dim")
-    table.add_column("Last Action", style="white")
+    table = Table(title="Nova Session History", border_style="accent")
+    table.add_column("Session ID", style="info")
+    table.add_column("Timestamp", style="dim")
+    table.add_column("Last Context", style="white")
     
     for s in sorted(sessions, key=lambda x: x['timestamp'], reverse=True):
         ts = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(s['timestamp']))
@@ -504,6 +531,7 @@ def self_analyze():
     console.print(Panel("[bold cyan]Nova Self-Analysis Protocol Initiated[/bold cyan]", border_style="cyan"))
     
     # 1. Tool Analysis
+    from src.nova_agents.tools.registry import ToolRegistry
     tools = ToolRegistry(
         workspace_dir=config.workspace_dir,
         allow_shell=config.allow_shell_commands,
@@ -524,8 +552,33 @@ def self_analyze():
         
     console.print(table)
     
-    # 2. Capabilities Report
-    console.print("\n[bold]2. Comprehensive Capabilities Report[/bold]")
+    # 2. Telemetry Report
+    console.print("\n[bold]2. Performance Telemetry[/bold]")
+    from src.nova_ops.telemetry import TelemetryManager
+    tm = TelemetryManager(config.workspace_dir / ".nova" / "telemetry.json")
+    stats = tm.get_stats()
+    
+    t_table = Table(show_header=False, box=None)
+    t_table.add_column("Metric", style="dim")
+    t_table.add_column("Value", style="bold green")
+    
+    t_table.add_row("Success Rate", stats["success_rate"])
+    t_table.add_row("Total Tasks", str(stats["total_tasks"]))
+    
+    tokens = stats.get("tokens", {})
+    t_table.add_row("Total Tokens", str(tokens.get("total", 0)))
+    
+    cache = stats.get("cache", {})
+    hits = cache.get("hits", 0)
+    misses = cache.get("misses", 0)
+    total_reqs = hits + misses
+    hit_rate = f"{(hits/total_reqs*100):.1f}%" if total_reqs > 0 else "0.0%"
+    t_table.add_row("Cache Hit Rate", hit_rate)
+    
+    console.print(t_table)
+
+    # 3. Capabilities Report
+    console.print("\n[bold]3. Comprehensive Capabilities Report[/bold]")
     doc_path = Path(__file__).parent.parent / "documentation" / "nova_comprehensive_capabilities.md"
     
     if doc_path.exists():
@@ -565,8 +618,8 @@ def sandbox():
 def sandbox_build(goal, agent):
     """Build in sandbox."""
     config = Config.from_env()
-    from src.agent_core.sandbox import Sandbox
-    from src.agent_core.planner import Planner
+    from src.nova_ops.sandbox import Sandbox
+    from src.nova_agents.planner import Planner
     
     sandbox = Sandbox()
     sandbox.init()

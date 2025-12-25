@@ -5,9 +5,8 @@ setup(
     version="2.0.0",
     description="Local AI Agent CLI powered by Ollama",
     author="Nova Team",
-    package_dir={"": "src"},
-    packages=find_packages(where="src"),
-    py_modules=["nova_cli"],
+    packages=find_packages(include=["src", "src.*"]),
+    # py_modules=["nova_cli"],
     install_requires=[
         "click>=8.0.0",
         "requests>=2.31.0",
@@ -34,7 +33,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "nova=nova_cli:main",
+            "nova=src.nova_cli:main",
         ],
     },
     python_requires=">=3.8",

@@ -17,11 +17,11 @@ dependencies = [
 ]
 
 [project.scripts]
-nova = "nova_cli:main"
+nova = "src.nova_cli:main"
 
 [tool.setuptools]
-package-dir = {"" = "src"}
-py-modules = ["nova_cli"]
+# package-dir = {"" = "src"}
+# py-modules = ["nova_cli"]
 
 [tool.setuptools.packages.find]
-where = ["src"]
+include = ["src", "src.*"]
