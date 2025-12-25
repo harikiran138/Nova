@@ -34,6 +34,9 @@ class Config:
     security_mode: bool = False
     turbo_mode: bool = False
     safety_level: str = "unrestricted"
+    safety_level: str = "unrestricted"
+    use_mongodb: bool = False
+    use_docker: bool = False
     temperature: float = 0.7
 
     @classmethod
@@ -108,6 +111,8 @@ class Config:
             mongodb_uri=os.getenv("MONGODB_URI", "mongodb://localhost:27017"),
             mongodb_db_name=os.getenv("MONGODB_DB_NAME", "nova_agent_db"),
             mongodb_collection_name=os.getenv("MONGODB_COLLECTION_NAME", "knowledge_base"),
+            use_mongodb=os.getenv("USE_MONGODB", "false").lower() == "true",
+            use_docker=os.getenv("USE_DOCKER", "false").lower() == "true",
             temperature=float(os.getenv("TEMPERATURE", "0.7"))
         )
     

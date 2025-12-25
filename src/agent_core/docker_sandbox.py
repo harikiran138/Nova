@@ -8,6 +8,12 @@ class DockerSandbox:
         self.image = image
         self.client = None
         self.container = None
+        from src.agent_core.config import Config
+        config = Config.from_env()
+        
+        if not config.use_docker:
+            return
+
         try:
             self.client = docker.from_env()
         except Exception:

@@ -17,6 +17,13 @@ class KaliTool:
         self.workspace = workspace.resolve()
         self.client = None
         self.session_active = False
+        
+        from src.agent_core.config import Config
+        config = Config.from_env()
+        
+        if not config.use_docker:
+            return
+
         if docker:
             try:
                 self.client = docker.from_env()

@@ -16,24 +16,31 @@ class MemoryManager:
     
     def __init__(self, memory_dir: Path):
         self.memory_dir = memory_dir # Kept for file-based fallback/secrets
-        self.use_fallback = False
-        try:
-            from src.api.database import get_database
-            from pymongo.errors import PyMongoError
-            self.db = get_database()
-            self.sessions = self.db.sessions
-            self.facts = self.db.facts
-            self.cache = self.db.cache
-            self.general = self.db.general_memory
-            
-            # Ensure indexes
-            self.sessions.create_index("id", unique=True)
-            self.facts.create_index("fact", unique=True)
-            print("Connected to MongoDB for memory.")
-        except Exception as e:
-            print(f"Warning: MongoDB not available ({e}). Using file-based fallback.")
-            self.use_fallback = True
-            
+        
+        from src.agent_core.config import Config
+        config = Config.from_env()
+        
+        self.use_fallback = not config.use_mongodb
+        
+        if config.use_mongodb:
+            try:
+                from src.api.database import get_database
+                from pymongo.errors import PyMongoError
+                self.db = get_database()
+                self.sessions = self.db.sessions
+                self.facts = self.db.facts
+                self.cache = self.db.cache
+                self.general = self.db.general_memory
+                
+                # Ensure indexes
+                self.sessions.create_index("id", unique=True)
+                self.facts.create_index("fact", unique=True)
+                print("Connected to MongoDB for memory.")
+            except Exception as e:
+                print(f"Warning: MongoDB not available ({e}). Using file-based fallback.")
+                self.use_fallback = True
+        
+        if self.use_fallback:
             # Ensure directories exist
             (self.memory_dir / "sessions").mkdir(parents=True, exist_ok=True)
         
@@ -116,12 +123,18 @@ class MemoryManager:
     # --- Caching System ---
     def get_cached_response(self, prompt: str) -> Optional[str]:
         """Retrieve cached response for a prompt."""
+        if self.use_fallback:
+            return None
+            
         key = str(hash(prompt))
         doc = self.cache.find_one({"key": key})
         return doc["response"] if doc else None
 
     def cache_response(self, prompt: str, response: str):
         """Cache a response."""
+        if self.use_fallback:
+            return
+
         key = str(hash(prompt))
         self.cache.update_one(
             {"key": key},
