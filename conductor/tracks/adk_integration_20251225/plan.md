@@ -13,7 +13,7 @@
 - [x] Task: Implement SQLite/Vector Store connector for local knowledge [0e51e6c]
     - [ ] Write Tests
     - [ ] Implement Feature
-- [ ] Task: Create Knowledge Indexing tool for project analysis
+- [x] Task: Create Knowledge Indexing tool for project analysis [5f2b527]
     - [ ] Write Tests
     - [ ] Implement Feature
 - [ ] Task: Integrate Knowledge Lookup into the ReAct Loop
