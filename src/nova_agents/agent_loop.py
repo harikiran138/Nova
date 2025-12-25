@@ -133,6 +133,11 @@ class AgentLoop:
         self.github_puller = GitHubToolPuller(self.config.workspace_dir)
         self.tools.register("github.pull_tools", self.github_puller.pull_and_register, "github.pull_tools(repo_url) - clones a repo and tries to register new tools found.")
         
+        # Register Vision Tool
+        from src.nova_agents.tools.vision_tools import VisionTool
+        self.vision_tool = VisionTool()
+        self.tools.register("vision.analyze", self.vision_tool.execute, self.vision_tool.description)
+        
         # Register Sandbox Tool
         from src.nova_agents.tools.sandbox_tool import CodeSandboxTool
         self.sandbox_tool = CodeSandboxTool()
@@ -216,6 +221,96 @@ class AgentLoop:
             self.conversation_history,
             {"profile": self.profile_name, "sandbox": self.sandbox_mode}
         )
+
+    def generate_plan(self, goal: str) -> Dict:
+        """Generate a structured plan with confidence scores."""
+        console.print(f"[bold cyan]🧠 Generating plan for:[/bold cyan] {goal}")
+        
+        prompt = f"""
+        GOAL: {goal}
+        
+        Create a step-by-step plan.
+        OUTPUT JSON ONLY:
+        {{
+            "plan": [
+                {{"step": 1, "description": "...", "tool": "tool.name", "confidence": 0.0-1.0}}
+            ]
+        }}
+        """
+        response = self.client.generate(self.conversation_history, prompt)
+        try:
+            # Simple parsing for JSON content
+            start = response.find("{")
+            end = response.rfind("}") + 1
+            if start != -1 and end != -1:
+                return json.loads(response[start:end])
+            return {"plan": []}
+        except Exception as e:
+            console.print(f"[red]Plan generation failed: {e}[/red]")
+            return {"plan": []}
+
+    def validate_plan(self, plan: Dict) -> bool:
+        """Validate the plan based on confidence scores."""
+        if not plan or "plan" not in plan:
+            return False
+            
+        for step in plan["plan"]:
+            confidence = step.get("confidence", 0.0)
+            if confidence < 0.7:
+                console.print(f"[yellow]⚠ Low confidence step:[/yellow] {step.get('description')} ({confidence})")
+                return False
+        
+        console.print("[green]✓ Plan validated successfully.[/green]")
+        return True
+
+    def execute_pvev_session(self, goal: str) -> Optional[str]:
+        """Execute a session using the Plan-Validate-Execute-Verify loop."""
+        # 1. Plan
+        plan = self.generate_plan(goal)
+        
+        # 2. Validate
+        if not self.validate_plan(plan):
+            console.print("[red]Plan validation failed. Aborting execution.[/red]")
+            return "Plan rejected due to low confidence."
+            
+        # 3. Execute
+        results = []
+        for step in plan["plan"]:
+            console.print(f"\n[bold]Executing Step {step['step']}:[/bold] {step['description']}")
+            
+            # Construct a mini-task for the standard loop or execute directly
+            # For this iteration, we'll delegate to the existing ReAct loop for the specific step
+            step_response = self.process_input(f"Execute step: {step['description']}. Use tool: {step.get('tool')}", max_iterations=3)
+            results.append(step_response)
+            
+            # 4. Verify (Implicit in process_input observation, but we can add explicit check)
+            if not step_response:
+                console.print(f"[red]Step {step['step']} failed.[/red]")
+                return "Execution halted."
+                
+                
+        execution_log = "\n".join([str(r) for r in results if r])
+        
+        # 4. Reflect
+        reflection = self.reflect(plan, execution_log)
+        
+        return f"{execution_log}\n\n[REFLECTION]\n{reflection}"
+
+    def reflect(self, plan: Dict, execution_log: str) -> str:
+        """Reflect on the execution success."""
+        console.print(f"\n[bold cyan]🤔 Reflecting on execution...[/bold cyan]")
+        prompt = f"""
+        PLAN: {json.dumps(plan)}
+        EXECUTION LOG:
+        {execution_log}
+        
+        Analyze the execution. Did it succeed? 
+        Identify any mistakes or areas for improvement.
+        OUTPUT: A concise summary of the outcome and any self-correction needed.
+        """
+        response = self.client.generate(self.conversation_history, prompt)
+        console.print(f"[dim]{response}[/dim]")
+        return response
 
     def process_input(self, user_input: str, max_iterations: int = 15) -> Optional[str]:
         """Process user input through the ReAct loop with streaming support."""

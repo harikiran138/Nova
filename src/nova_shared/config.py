@@ -42,6 +42,7 @@ class Config:
     typing_speed: float = 0.005
     skip_animations: bool = False
     circuit_breaker_threshold: int = 5
+    reasoning_mode: str = "react"
     model_options: Dict[str, Any] = None
 
     @classmethod
@@ -100,6 +101,7 @@ class Config:
             typing_speed=float(os.getenv("TYPING_SPEED", "0.005")),
             skip_animations=skip_animations,
             circuit_breaker_threshold=int(os.getenv("CIRCUIT_BREAKER_THRESHOLD", "5")),
+            reasoning_mode=os.getenv("REASONING_MODE", "react").lower(), # react, planner
             model_options={}
         )
     

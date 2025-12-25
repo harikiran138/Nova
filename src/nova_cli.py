@@ -431,7 +431,11 @@ def run(goal, agent, sandbox, resume):
         if not agent_loop.load_session(resume):
             return
 
-    agent_loop.process_input(goal)
+    if config.reasoning_mode == "planner":
+        console.print("[bold cyan]🧠 PVEV Reasoning Mode Activated[/bold cyan]")
+        agent_loop.execute_pvev_session(goal)
+    else:
+        agent_loop.process_input(goal)
 
 @cli.command()
 def history():
