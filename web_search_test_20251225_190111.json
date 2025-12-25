@@ -1,0 +1,243 @@
+{
+  "test_config": {
+    "num_queries": 20,
+    "timestamp": "2025-12-25T19:01:11.507642",
+    "categories": [
+      "technology",
+      "science",
+      "programming",
+      "data_science",
+      "business",
+      "trending",
+      "technical",
+      "research",
+      "educational",
+      "how_to"
+    ]
+  },
+  "results": [
+    {
+      "index": 1,
+      "query": "remote work productivity",
+      "timestamp": "2025-12-25T18:49:46.770483",
+      "success": false,
+      "duration_ms": 14102.885007858276,
+      "error": "Search failed after 3 retries across multiple backends.",
+      "result_count": 0,
+      "response_data": null
+    },
+    {
+      "index": 2,
+      "query": "model evaluation metrics guide",
+      "timestamp": "2025-12-25T18:50:18.877866",
+      "success": false,
+      "duration_ms": 13018.891096115112,
+      "error": "Search failed after 3 retries across multiple backends.",
+      "result_count": 0,
+      "response_data": null
+    },
+    {
+      "index": 3,
+      "query": "space exploration missions guide",
+      "timestamp": "2025-12-25T18:50:49.898664",
+      "success": false,
+      "duration_ms": 13732.034921646118,
+      "error": "Search failed after 3 retries across multiple backends.",
+      "result_count": 0,
+      "response_data": null
+    },
+    {
+      "index": 4,
+      "query": "how to debug production issues",
+      "timestamp": "2025-12-25T18:51:21.632080",
+      "success": false,
+      "duration_ms": 12924.216032028198,
+      "error": "Search failed after 3 retries across multiple backends.",
+      "result_count": 0,
+      "response_data": null
+    },
+    {
+      "index": 5,
+      "query": "best microservices architecture",
+      "timestamp": "2025-12-25T18:51:52.559885",
+      "success": false,
+      "duration_ms": 13609.746217727661,
+      "error": "Search failed after 3 retries across multiple backends.",
+      "result_count": 0,
+      "response_data": null
+    },
+    {
+      "index": 6,
+      "query": "viral social media trends",
+      "timestamp": "2025-12-25T18:52:24.174292",
+      "success": false,
+      "duration_ms": 13238.133192062378,
+      "error": "Search failed after 3 retries across multiple backends.",
+      "result_count": 0,
+      "response_data": null
+    },
+    {
+      "index": 7,
+      "query": "computer vision algorithms",
+      "timestamp": "2025-12-25T18:52:55.416442",
+      "success": false,
+      "duration_ms": 12746.710062026978,
+      "error": "Search failed after 3 retries across multiple backends.",
+      "result_count": 0,
+      "response_data": null
+    },
+    {
+      "index": 8,
+      "query": "academic paper search guide",
+      "timestamp": "2025-12-25T18:53:26.169996",
+      "success": false,
+      "duration_ms": 40787.089824676514,
+      "error": "Search failed after 3 retries across multiple backends.",
+      "result_count": 0,
+      "response_data": null
+    },
+    {
+      "index": 9,
+      "query": "best how to optimize database queries",
+      "timestamp": "2025-12-25T18:54:24.964166",
+      "success": false,
+      "duration_ms": 41160.89391708374,
+      "error": "Search failed after 3 retries across multiple backends.",
+      "result_count": 0,
+      "response_data": null
+    },
+    {
+      "index": 10,
+      "query": "latest AI developments 2024",
+      "timestamp": "2025-12-25T18:55:24.128830",
+      "success": false,
+      "duration_ms": 13171.326875686646,
+      "error": "Search failed after 3 retries across multiple backends.",
+      "result_count": 0,
+      "response_data": null
+    },
+    {
+      "index": 11,
+      "query": "cryptocurrency prices tutorial",
+      "timestamp": "2025-12-25T18:55:55.311005",
+      "success": false,
+      "duration_ms": 14406.28719329834,
+      "error": "Search failed after 3 retries across multiple backends.",
+      "result_count": 0,
+      "response_data": null
+    },
+    {
+      "index": 12,
+      "query": "vaccine development guide",
+      "timestamp": "2025-12-25T18:56:27.727236",
+      "success": false,
+      "duration_ms": 12929.657936096191,
+      "error": "Search failed after 3 retries across multiple backends.",
+      "result_count": 0,
+      "response_data": null
+    },
+    {
+      "index": 13,
+      "query": "microservices architecture 2024",
+      "timestamp": "2025-12-25T18:56:58.662252",
+      "success": false,
+      "duration_ms": 13629.242181777954,
+      "error": "Search failed after 3 retries across multiple backends.",
+      "result_count": 0,
+      "response_data": null
+    },
+    {
+      "index": 14,
+      "query": "citation management 2024",
+      "timestamp": "2025-12-25T18:57:30.306185",
+      "success": false,
+      "duration_ms": 14992.911338806152,
+      "error": "Search failed after 3 retries across multiple backends.",
+      "result_count": 0,
+      "response_data": null
+    },
+    {
+      "index": 15,
+      "query": "best educational technology",
+      "timestamp": "2025-12-25T18:58:03.313618",
+      "success": false,
+      "duration_ms": 13637.40611076355,
+      "error": "Search failed after 3 retries across multiple backends.",
+      "result_count": 0,
+      "response_data": null
+    },
+    {
+      "index": 16,
+      "query": "database indexing performance tutorial",
+      "timestamp": "2025-12-25T18:58:34.960237",
+      "success": false,
+      "duration_ms": 12491.053104400635,
+      "error": "Search failed after 3 retries across multiple backends.",
+      "result_count": 0,
+      "response_data": null
+    },
+    {
+      "index": 17,
+      "query": "assessment methods tutorial",
+      "timestamp": "2025-12-25T18:59:05.464919",
+      "success": false,
+      "duration_ms": 13020.67518234253,
+      "error": "Search failed after 3 retries across multiple backends.",
+      "result_count": 0,
+      "response_data": null
+    },
+    {
+      "index": 18,
+      "query": "cloud computing best practices tutorial",
+      "timestamp": "2025-12-25T18:59:36.497605",
+      "success": false,
+      "duration_ms": 12117.163896560669,
+      "error": "Search failed after 3 retries across multiple backends.",
+      "result_count": 0,
+      "response_data": null
+    },
+    {
+      "index": 19,
+      "query": "market research methods",
+      "timestamp": "2025-12-25T19:00:06.629031",
+      "success": false,
+      "duration_ms": 16698.123931884766,
+      "error": "Search failed after 3 retries across multiple backends.",
+      "result_count": 0,
+      "response_data": null
+    },
+    {
+      "index": 20,
+      "query": "caching mechanisms guide",
+      "timestamp": "2025-12-25T19:00:41.338412",
+      "success": false,
+      "duration_ms": 15167.027235031128,
+      "error": "Search failed after 3 retries across multiple backends.",
+      "result_count": 0,
+      "response_data": null
+    }
+  ],
+  "analysis": {
+    "summary": {
+      "total_queries": 20,
+      "successful": 0,
+      "failed": 20,
+      "success_rate": "0.00%"
+    },
+    "performance": {
+      "avg_duration_ms": "16379.07",
+      "min_duration_ms": "12117.16",
+      "max_duration_ms": "41160.89",
+      "avg_results_per_query": "0.00"
+    },
+    "errors": {
+      "total_errors": 20,
+      "error_types": {
+        "Search failed after 3 retries across multiple backends.": 20
+      }
+    },
+    "recommendations": [
+      "\u26a0\ufe0f  Success rate is 0.0%. Investigate error patterns."
+    ]
+  }
+}

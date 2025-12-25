@@ -5,7 +5,7 @@ Routes tasks to appropriate reasoning modes based on task type.
 """
 
 from enum import Enum
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 
 
@@ -15,7 +15,9 @@ class ReasoningMode(Enum):
     KEYWORD_ENFORCED = "keyword_enforced"  # Logic, constraints
     PROCEDURAL_STEP = "procedural_step"  # Problem solving, puzzles
     CONVERSATIONAL = "conversational"  # Multi-turn dialogue
+    RESEARCH = "research"  # Deep search and verification
     BENCHMARK_STRICT = "benchmark_strict"  # General benchmark mode
+    TOOLBENCH = "toolbench" # ToolBench specific mode
 
 
 @dataclass
@@ -24,12 +26,12 @@ class TaskPolicy:
     mode: ReasoningMode
     max_iterations: int = 10
     require_final_answer: bool = False
-    required_keywords: Optional[list] = None
-    required_verbs: Optional[list] = None
-    required_numbers: Optional[list] = None
+    required_keywords: Optional[List[str]] = None
+    required_verbs: Optional[List[str]] = None
+    required_numbers: Optional[List[str]] = None
     format_validator: Optional[callable] = None
     allow_tools: bool = True
-    tool_allowlist: Optional[list] = None
+    tool_allowlist: Optional[List[str]] = None
 
 
 class ReasoningRouter:
@@ -70,6 +72,12 @@ class ReasoningRouter:
             max_iterations=3,
             allow_tools=True
         ),
+        "research": TaskPolicy(
+            mode=ReasoningMode.RESEARCH,
+            max_iterations=12,
+            allow_tools=True,
+            require_final_answer=True
+        ),
         "format": TaskPolicy(
             mode=ReasoningMode.BENCHMARK_STRICT,
             max_iterations=3,
@@ -79,6 +87,12 @@ class ReasoningRouter:
             mode=ReasoningMode.BENCHMARK_STRICT,
             max_iterations=3,
             allow_tools=False
+        ),
+        "toolbench": TaskPolicy(
+            mode=ReasoningMode.TOOLBENCH,
+            max_iterations=15,
+            allow_tools=True,
+            require_final_answer=True
         )
     }
     
@@ -125,6 +139,18 @@ class ReasoningRouter:
         """Get system prompt for the policy mode."""
         base_prompt = "You are a precise AI assistant optimized for benchmark tasks."
         
+        if policy.mode == ReasoningMode.RESEARCH:
+            return f"""{base_prompt}
+
+CRITICAL RESEARCH PROTOCOL:
+1. You are a Research Scientist. Verify ALL facts.
+2. If searching for a list/count, you MUST extract the actual items into your context before answering.
+3. Verify negative claims ("No albums", "Not found"). If you find '0' or 'no' items, verify with a second source or query.
+4. Do not hallucinate. If you cannot find info, say "Not Found".
+5. Use tools (web.search, browser.browse) extensively.
+6. TOOL USAGE: You MUST use JSON format for tool calls. Example: {{"tool": "web.search", "args": {{"query": "search term"}}}}
+7. End with: FINAL_ANSWER: <answer>"""
+
         if policy.mode == ReasoningMode.STRICT_FINAL_ANSWER:
             return f"""{base_prompt}
 
@@ -164,10 +190,23 @@ CRITICAL RULES:
 3. Build on previous responses
 4. Be concise but contextually aware"""
         
+    
+        elif policy.mode == ReasoningMode.TOOLBENCH:
+             return f"""{base_prompt}
+
+CRITICAL INSTRUCTIONS:
+1. You are an expert API aggregator handling complex user queries.
+2. USE ONLY the tools provided in the context below.
+3. You can use multiple tools to solve a task.
+4. Output JSON ONLY for tool calls: {{"tool": "ToolName", "args": {{...}}}}
+5. If the tools provided are not sufficient, state why.
+6. Think step-by-step.
+7. Available Tools: {{tool_descriptions}}"""
+
         else:  # BENCHMARK_STRICT
             return f"""{base_prompt}
 
-BENCHMARK MODE - CRITICAL RULES:
+CRITICAL INSTRUCTIONS:
 1. Follow output format EXACTLY as specified
 2. Do not add explanations unless requested
 3. Do not be conversational

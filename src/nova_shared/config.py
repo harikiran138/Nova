@@ -45,6 +45,11 @@ class Config:
     reasoning_mode: str = "react"
     model_options: Dict[str, Any] = None
     debug_mode: bool = False  # Debug logging mode
+    
+    # AgentBench Configuration
+    benchmark_mode: bool = False  # Enable strict benchmark compliance mode
+    benchmark_task_type: str = "auto"  # Task type detection: auto, arithmetic, logic, problem_solving, conversation
+    benchmark_max_retries: int = 2  # Maximum validation retry attempts
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -103,7 +108,10 @@ class Config:
             skip_animations=skip_animations,
             circuit_breaker_threshold=int(os.getenv("CIRCUIT_BREAKER_THRESHOLD", "5")),
             reasoning_mode=os.getenv("REASONING_MODE", "react").lower(), # react, planner
-            model_options={}
+            model_options={},
+            benchmark_mode=os.getenv("BENCHMARK_MODE", "false").lower() == "true",
+            benchmark_task_type=os.getenv("BENCHMARK_TASK_TYPE", "auto").lower(),
+            benchmark_max_retries=int(os.getenv("BENCHMARK_MAX_RETRIES", "2"))
         )
     
     def load_profiles(self) -> dict:

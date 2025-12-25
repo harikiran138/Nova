@@ -446,10 +446,13 @@ def show_status(config: Config, args):
 @click.pass_context
 @click.option("--agent", "-a", default="general", help="Agent profile")
 @click.option("--sandbox/--no-sandbox", default=None, help="Sandbox mode")
-def cli(ctx, agent, sandbox):
+@click.option("--debug/--no-debug", default=False, help="Enable debug mode (show tracebacks)")
+def cli(ctx, agent, sandbox, debug):
     """Nova Agent CLI"""
     if ctx.invoked_subcommand is None:
         config = Config.from_env()
+        if debug:
+            config.debug_mode = True
         run_interactive(config, profile_name=agent, sandbox_mode=sandbox or False)
 
 @cli.command()

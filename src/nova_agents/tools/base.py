@@ -10,6 +10,8 @@ class Tool(ABC):
     description: str
     risk_level: str  # LOW | MEDIUM | HIGH
 
+    args_schema: Any = None # Pydantic model for arguments
+
     @abstractmethod
     def execute(self, **kwargs) -> Any:
         """
@@ -27,11 +29,12 @@ class FunctionTool(Tool):
     """
     Wrapper for function-based tools to make them compatible with the Tool interface.
     """
-    def __init__(self, name: str, func: callable, description: str, risk_level: str = "MEDIUM"):
+    def __init__(self, name: str, func: callable, description: str, risk_level: str = "MEDIUM", args_schema: Any = None):
         self._name = name
         self._func = func
         self._description = description
         self.risk_level = risk_level
+        self.args_schema = args_schema
 
     @property
     def name(self) -> str:
