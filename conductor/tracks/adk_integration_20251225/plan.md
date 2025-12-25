@@ -1,7 +1,7 @@
 # Plan: ADK & Knowledge Base Integration
 
 ## Phase 1: ADK Foundation & Tool Discovery
-- [ ] Task: Define standard ADK Base Classes and Interfaces
+- [x] Task: Define standard ADK Base Classes and Interfaces [5c3d9a3]
     - [ ] Write Tests
     - [ ] Implement Feature
 - [ ] Task: Implement Auto-discovery mechanism for local ADK plugins
