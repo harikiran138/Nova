@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  nova-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: nova-api
+    ports:
+      - "8000:8000"
+    environment:
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: llama3
+      WORKSPACE_DIR: /workspace
+      ALLOW_SHELL_COMMANDS: "true"
+    volumes:
+      - ./workspace:/workspace
+      - ./nova-core:/app/nova-core
+      - ./nova-tools:/app/nova-tools
+      - ./nova-api:/app/nova-api
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  nova-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.ui
+    container_name: nova-ui
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./nova-ui:/app
+      - /app/node_modules
+    depends_on:
+      - nova-api
+
+  # Legacy CLI container (optional)
+  nova-cli:
+    build: .
+    container_name: nova-cli
+    command: tail -f /dev/null
+    environment:
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+    volumes:
+      - ./workspace:/workspace
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
