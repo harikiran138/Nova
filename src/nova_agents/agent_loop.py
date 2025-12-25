@@ -381,6 +381,10 @@ class AgentLoop:
             self.telemetry.log_tokens(prompt_tokens, completion_tokens)
             self.budget_manager.track(selected_tier, prompt_tokens + completion_tokens)
             
+            # Log Cost
+            estimated_cost = (prompt_tokens + completion_tokens) * (self.budget_manager.COSTS[selected_tier] / 1000)
+            self.telemetry.log_cost(estimated_cost)
+            
             if response:
                 self.memory.cache_response(cache_key, response)
                 self.trajectory_logger.log_step("thought", {"content": response})
@@ -483,7 +487,24 @@ class AgentLoop:
             if tool_name not in self.tools.tools:
                 result = {"success": False, "error": f"Tool '{tool_name}' not found."}
             else:
-                result = self.tools.execute(tool_name, tool_args)
+                # Retry logic for self-healing
+                max_retries = 1
+                for attempt in range(max_retries + 1):
+                    try:
+                        result = self.tools.execute(tool_name, tool_args)
+                        if result.get("success", False):
+                            break # Success, stop retrying
+                        else:
+                            # If tool returned explicit failure, maybe retry if it's a specific type?
+                            # For now, explicit failure is returned immediately unless we define retryable errors.
+                            # But we DO retry on crash (Exception).
+                            pass
+                    except Exception as e:
+                        if attempt < max_retries:
+                            console.print(f"[yellow]⚠ Tool '{tool_name}' crashed. Retrying (Attempt {attempt+1}/{max_retries})...[/yellow]")
+                            continue
+                        else:
+                            raise e # Re-raise to be caught by outer block
                 
             # Update Circuit Breaker
             if result.get("success", False):

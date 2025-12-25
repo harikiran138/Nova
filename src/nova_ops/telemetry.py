@@ -25,6 +25,11 @@ class TelemetryManager:
         self.metrics["total_tokens"] = self.metrics.get("total_tokens", 0) + prompt + completion
         self._save()
 
+    def log_cost(self, amount: float):
+        """Log estimated cost in USD."""
+        self.metrics["total_cost"] = self.metrics.get("total_cost", 0.0) + amount
+        self._save()
+
     def log_cache(self, hit: bool):
         if hit:
             self.metrics["cache_hits"] = self.metrics.get("cache_hits", 0) + 1
