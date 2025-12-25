@@ -55,3 +55,41 @@ class IndexingTool(BaseTool):
             
         except Exception as e:
             return {"success": False, "error": f"Indexing failed: {str(e)}"}
+
+class LookupTool(BaseTool):
+    """
+    Tool to query the local knowledge base.
+    """
+    def __init__(self):
+        super().__init__(
+            name="knowledge.lookup",
+            description="Query the local knowledge base for relevant information. Use this to find code snippets, documentation, or facts stored locally."
+        )
+        self.kb = KnowledgeBase()
+
+    def execute(self, query: str, **kwargs) -> Dict[str, Any]:
+        """
+        Execute the lookup.
+
+        Args:
+            query: The search query.
+            
+        Returns:
+            Dict containing the search results.
+        """
+        try:
+            results = self.kb.query(query, n_results=5)
+            if not results:
+                return {"success": True, "result": "No relevant information found."}
+            
+            formatted_output = "Found relevant information:\n\n"
+            for i, res in enumerate(results):
+                metadata = res.get('metadata', {})
+                source = metadata.get('source', 'Unknown Source')
+                formatted_output += f"--- Result {i+1} (Source: {source}) ---\n"
+                formatted_output += f"{res.get('document')}\n\n"
+            
+            return {"success": True, "result": formatted_output}
+        except Exception as e:
+            return {"success": False, "error": f"Lookup failed: {str(e)}"}
+
