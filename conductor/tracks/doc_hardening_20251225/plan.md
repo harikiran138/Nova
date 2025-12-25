@@ -2,10 +2,9 @@
 
 Refine project documentation to reflect the industrial-grade Nova Project Overview and archive obsolete materials.
 
-## Phase 0: Pre-Flight Safety Check
+## Phase 0: Pre-Flight Safety Check [checkpoint: 54f8a34]
 - [x] Task: Identify Canonical Documents a3ea4d1
-    - [ ] Sub-task: Confirm README.md, documentation/Project_Overview.md, and documentation/Architecture.md as protected canonical files
-- [ ] Task: Conductor - User Manual Verification 'Pre-Flight Safety Check' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Pre-Flight Safety Check' (Protocol in workflow.md) 54f8a34
 
 ## Phase 1: Archival and Cleanup
 - [ ] Task: Create Archival Infrastructure
