@@ -27,17 +27,24 @@ class OllamaClient:
         self.model = model
         self.chat_endpoint = f"{self.base_url}/api/chat"
     
+    def check_health(self) -> Dict[str, Any]:
+        """Check detailed health status of the connection."""
+        try:
+            response = requests.get(f"{self.base_url}/api/tags", timeout=2)
+            if response.status_code == 200:
+                return {"status": "online", "models": len(response.json().get("models", []))}
+            return {"status": "error", "code": response.status_code}
+        except Exception as e:
+            return {"status": "offline", "error": str(e)}
+
     def test_connection(self) -> bool:
         """Test connection to Ollama server.
         
         Returns:
             True if connection successful, False otherwise
         """
-        try:
-            response = requests.get(f"{self.base_url}/api/tags", timeout=5)
-            return response.status_code == 200
-        except requests.exceptions.RequestException:
-            return False
+        health = self.check_health()
+        return health["status"] == "online"
     
     def generate(
         self,
@@ -94,11 +101,13 @@ class OllamaClient:
             return None
         except requests.exceptions.ConnectionError:
             console.print(f"[red]Error: Cannot connect to Ollama at {self.base_url}[/red]")
-            console.print("[yellow]Make sure Ollama is running:[/yellow]")
-            console.print("  1. Check if Ollama is installed: ollama --version")
-            console.print("  2. Start Ollama service if needed")
-            console.print(f"  3. Pull the model if not available: ollama pull {self.model}")
-            return None
+            # Offline Fallback (Phase 3)
+            return json.dumps({
+                "error": "offine_mode", 
+                "message": "System is offline. Falling back to local tools only. Use 'ls', 'search' (if web available).",
+                "tool": "none"
+            }) if "json" in kwargs.get("format", "") else "SYSTEM_OFFLINE: Connection to neural engine lost. Functionality limited."
+            
         except requests.exceptions.HTTPError as e:
             if e.response.status_code == 404:
                 console.print(f"[red]Error: Model '{self.model}' not found[/red]")
@@ -151,7 +160,10 @@ class OllamaClient:
                         
         except Exception as e:
             console.print(f"[red]Streaming Error: {e}[/red]")
-            yield None
+            if "Connection" in str(e) or "Failed to establish a new connection" in str(e):
+                 yield "SYSTEM_OFFLINE: Connection to neural engine lost. Functionality limited to local tools."
+            else:
+                 yield None
 
     def get_available_models(self) -> List[str]:
         """Get list of available models from Ollama."""

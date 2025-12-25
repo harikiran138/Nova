@@ -72,9 +72,9 @@ class ModelRouter:
     def __init__(self, budget_manager: BudgetManager):
         self.budget = budget_manager
 
-    def route(self, query: str, active_models: Dict[str, str]) -> Tuple[ModelTier, str]:
+    def route(self, query: str, active_models: Dict[str, str]) -> Tuple[ModelTier, str, str]:
         """
-        Returns (tier, model_name).
+        Returns (tier, model_name, reason).
         active_models: Dict mapping Tier to specific model name.
         """
         complexity = self._assess_complexity(query)
@@ -82,13 +82,18 @@ class ModelRouter:
         # Default strategy: Use lowest efficient tier that fits budget
         if complexity == ModelTier.POWERFUL:
             if self.budget.can_afford(ModelTier.POWERFUL):
-                return ModelTier.POWERFUL, active_models.get(ModelTier.POWERFUL.value, active_models.get(ModelTier.BALANCED.value))
+                model = active_models.get(ModelTier.POWERFUL.value, active_models.get(ModelTier.BALANCED.value))
+                return ModelTier.POWERFUL, model, "High complexity detected (length/keywords), budget allows."
+            else:
+                model = active_models.get(ModelTier.BALANCED.value, active_models.get(ModelTier.FAST.value))
+                return ModelTier.BALANCED, model, "High complexity but budget constrained to Balanced."
         
         if complexity == ModelTier.BALANCED:
             if self.budget.can_afford(ModelTier.BALANCED):
-                 return ModelTier.BALANCED, active_models.get(ModelTier.BALANCED.value, active_models.get(ModelTier.FAST.value))
+                 model = active_models.get(ModelTier.BALANCED.value, active_models.get(ModelTier.FAST.value))
+                 return ModelTier.BALANCED, model, "Medium complexity, budget allows Balanced."
                  
-        return ModelTier.FAST, active_models.get(ModelTier.FAST.value, "default_model")
+        return ModelTier.FAST, active_models.get(ModelTier.FAST.value, "default_model"), "Low complexity or efficiency preferred."
 
     def _assess_complexity(self, query: str) -> ModelTier:
         """Heuristic complexity assessment."""

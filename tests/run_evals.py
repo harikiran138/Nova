@@ -15,7 +15,7 @@ def cli():
     pass
 
 @cli.command()
-@click.option('--suite', type=click.Choice(['reasoning', 'tools', 'memory', 'vision', 'safety', 'all']), default='all', help='Which test suite to run')
+@click.option('--suite', default='all', type=click.Choice(['reasoning', 'tools', 'memory', 'vision', 'safety', 'chaos', 'adversarial', 'longrun', 'degradation', 'security_level4', 'self_repair', 'all'], case_sensitive=False), help='Which test suite to run')
 def run(suite):
     """Run specified evaluation suites."""
     console.print(f"[bold green]🤖 Starting Nova Eval Runner: Suite={suite.upper()}[/bold green]")
@@ -63,6 +63,40 @@ def run(suite):
             suites_to_run.append(ChaosSuite())
         except ImportError as e:
             console.print(f"[yellow]⚠ Could not load Chaos Suite: {e}[/yellow]")
+
+    if suite == 'all' or suite == 'adversarial':
+        try:
+            from tests.evals.adversarial.test_adversarial import AdversarialSuite
+            suites_to_run.append(AdversarialSuite())
+        except ImportError as e:
+            console.print(f"[yellow]⚠ Could not load Adversarial Suite: {e}[/yellow]")
+
+    if suite == 'all' or suite == 'longrun':
+        try:
+            from tests.evals.longrun.test_longrun import LongRunSuite
+            suites_to_run.append(LongRunSuite())
+        except ImportError as e:
+            console.print(f"[yellow]⚠ Could not load LongRun Suite: {e}[/yellow]")
+
+    if suite == 'all' or suite == 'degradation':
+        try:
+            from tests.evals.degradation.test_degradation import DegradationSuite
+            suites_to_run.append(DegradationSuite())
+        except ImportError as e:
+            console.print(f"[yellow]⚠ Could not load Degradation Suite: {e}[/yellow]")
+    if suite == 'all' or suite == 'security_level4':
+        try:
+            from tests.evals.safety.test_security_level4 import SecurityLevel4Suite
+            suites_to_run.append(SecurityLevel4Suite())
+        except ImportError as e:
+            console.print(f"[yellow]⚠ Could not load Security Level 4 Suite: {e}[/yellow]")
+
+    if suite == 'all' or suite == 'self_repair':
+        try:
+            from tests.evals.self_repair.test_self_repair import SelfRepairSuite
+            suites_to_run.append(SelfRepairSuite())
+        except ImportError as e:
+            console.print(f"[yellow]⚠ Could not load Self Repair Suite: {e}[/yellow]")
     
     total_score = 0
     count = 0
