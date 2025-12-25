@@ -9,7 +9,7 @@ from .learning.memory import KnowledgeStore
 from .learning.loop import LearningAgent
 from .tools_parsing import parse_tool_calls
 from .safety import SafetyPolicy
-from .knowledge_base import analyze_error
+from .error_analysis import analyze_error
 from rich.console import Console
 from rich.panel import Panel
 from rich.markdown import Markdown
