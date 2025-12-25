@@ -200,7 +200,7 @@ class AgentLoop:
         self.consecutive_failures: Dict[str, int] = {}
 
         # Optimization & Routing
-        self.budget_manager = BudgetManager()
+        self.budget_manager = BudgetManager(storage_path=self.config.workspace_dir / ".nova" / "budget.json")
         self.router = ModelRouter(self.budget_manager)
         self.compressor = ContextCompressor(self.client)
 
@@ -342,7 +342,7 @@ class AgentLoop:
                 "balanced": "llama3",
                 "powerful": "llama3:70b" # Assuming this exists or falls back
             }
-            selected_model = self.router.route(user_input, available_models)
+            selected_tier, selected_model = self.router.route(user_input, available_models)
             generate_kwargs["model"] = selected_model
             
             cache_key = f"{current_prompt}_{str(self.conversation_history)}"
@@ -379,6 +379,7 @@ class AgentLoop:
             prompt_tokens = len(current_prompt) // 4
             completion_tokens = len(response) // 4
             self.telemetry.log_tokens(prompt_tokens, completion_tokens)
+            self.budget_manager.track(selected_tier, prompt_tokens + completion_tokens)
             
             if response:
                 self.memory.cache_response(cache_key, response)
@@ -550,6 +551,17 @@ class AgentLoop:
                     
         if task.status != "failed":
              task.transition_to("completed")
+             # Save to episodic memory
+             try:
+                 self.memory.save_episode({
+                     "task": task.goal,
+                     "steps": [s.description for s in task.steps],
+                     "result": "success",
+                     "session_id": self.session_id
+                 })
+                 console.print(f"  [success]✔ Saved episode to procedural memory.[/success]")
+             except Exception as e:
+                 console.print(f"  [dim]Failed to save episodic memory: {e}[/dim]")
         return task
 
     def _prune_context(self):

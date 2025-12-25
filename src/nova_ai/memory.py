@@ -35,6 +35,8 @@ class MemoryManager:
                 # Ensure indexes
                 self.sessions.create_index("id", unique=True)
                 self.facts.create_index("fact", unique=True)
+                self.episodes = self.db.episodes
+                self.episodes.create_index("task")
                 print("Connected to MongoDB for memory.")
             except Exception as e:
                 print(f"Warning: MongoDB not available ({e}). Using file-based fallback.")
@@ -43,6 +45,7 @@ class MemoryManager:
         if self.use_fallback:
             # Ensure directories exist
             (self.memory_dir / "sessions").mkdir(parents=True, exist_ok=True)
+            (self.memory_dir / "episodes").mkdir(parents=True, exist_ok=True)
         
     def save_session(self, session_id: str, history: List[Dict[str, str]], metadata: Dict[str, Any] = None):
         """Save a session to MongoDB or File."""
@@ -215,6 +218,60 @@ class MemoryManager:
         else:
             cursor = self.facts.find().sort("timestamp", -1)
             return [f["fact"] for f in cursor]
+
+    def semantic_search(self, query: str, limit: int = 3) -> List[Dict[str, Any]]:
+        """Search long-term memory using Chroma vector search."""
+        try:
+            from src.api.rag import get_vector_store
+            vector_store = get_vector_store()
+            results = vector_store.similarity_search(query, k=limit)
+            return [{"content": r.page_content, "metadata": r.metadata} for r in results]
+        except Exception as e:
+            print(f"Semantic search failed: {e}")
+            return []
+
+    # --- Episodic Memory (Task Success Patterns) ---
+    def save_episode(self, episode: Dict[str, Any]):
+        """Save a successful task execution episode."""
+        episode["timestamp"] = time.time()
+        if self.use_fallback:
+            try:
+                task = episode.get("task", "unknown")
+                episodes_file = self.memory_dir / "episodes" / f"{task}.json"
+                episodes = []
+                if episodes_file.exists():
+                    with open(episodes_file, "r") as f:
+                        episodes = json.load(f)
+                
+                episodes.append(episode)
+                with open(episodes_file, "w") as f:
+                    json.dump(episodes, f, indent=2)
+            except Exception as e:
+                print(f"Failed to save episode to file: {e}")
+        else:
+            self.episodes.insert_one(episode)
+
+    def get_episodes(self, task: str = None) -> List[Dict[str, Any]]:
+        """Retrieve successful episodes, optionally filtered by task."""
+        if self.use_fallback:
+            try:
+                if task:
+                    p = self.memory_dir / "episodes" / f"{task}.json"
+                    if p.exists():
+                        with open(p, "r") as f:
+                            return json.load(f)
+                    return []
+                else:
+                    all_episodes = []
+                    for p in (self.memory_dir / "episodes").glob("*.json"):
+                        with open(p, "r") as f:
+                            all_episodes.extend(json.load(f))
+                    return all_episodes
+            except Exception:
+                return []
+        else:
+            query = {"task": task} if task else {}
+            return list(self.episodes.find(query).sort("timestamp", -1))
 
     # --- General Memory ---
     # --- General Memory ---

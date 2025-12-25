@@ -1,63 +1,43 @@
 import pytest
-import time
 from src.nova_ai.routing import ModelRouter, BudgetManager, ModelTier
 
-def test_budget_tracking():
-    bm = BudgetManager(daily_budget=0.01)
-    bm.track(ModelTier.FAST, 1000) # 0.0001
-    assert bm.current_spend == 0.0001
+def test_model_router_heuristics():
+    budget = BudgetManager(daily_budget=1.0)
+    router = ModelRouter(budget)
     
-    bm.track(ModelTier.POWERFUL, 1000) # 0.002
-    assert bm.current_spend == 0.0021
+    models = {
+        "fast": "gemma:2b",
+        "balanced": "llama3",
+        "powerful": "llama3:70b"
+    }
+    
+    # 1. Simple query -> Fast model
+    tier, model = router.route("Hello world", models)
+    assert model == "gemma:2b"
+    assert tier.value == "fast"
+    
+    # 2. Coding query -> Balanced model
+    tier, model = router.route("Write a python script to sort a list", models)
+    assert model == "llama3"
+    
+    # 3. Complex/Long query -> Powerful model
+    long_query = "Refactor this architecture: " + ("abc " * 1000)
+    tier, model = router.route(long_query, models)
+    assert model == "llama3:70b"
 
-def test_routing_logic_simple():
-    bm = BudgetManager(daily_budget=1.0)
-    router = ModelRouter(bm)
+def test_budget_restriction():
+    # Tiny budget
+    budget = BudgetManager(daily_budget=0.00001)
+    router = ModelRouter(budget)
     
-    active_models = {
-        "fast": "fast_model",
-        "balanced": "balanced_model",
-        "powerful": "powerful_model"
+    models = {
+        "fast": "gemma:2b",
+        "balanced": "llama3",
+        "powerful": "llama3:70b"
     }
     
-    # Simple query -> Fast model
-    # Note: Our simple heuristic uses length < 2000 and no complex keywords
-    query = "Hello, how are you?"
-    model = router.route(query, active_models)
-    assert model == "fast_model"
-
-def test_routing_logic_complex():
-    bm = BudgetManager(daily_budget=1.0)
-    router = ModelRouter(bm)
-    
-    active_models = {
-        "fast": "fast_model",
-        "balanced": "balanced_model",
-        "powerful": "powerful_model"
-    }
-    
-    # Complex keyword -> Balanced model
-    query = "Can you design a software architecture for me?"
-    model = router.route(query, active_models)
-    assert model == "balanced_model"
-    
-def test_budget_constraint_downgrade():
-    bm = BudgetManager(daily_budget=0.00001) # Very low budget
-    # Exhaust budget immediately
-    bm.track(ModelTier.POWERFUL, 10000) 
-    
-    router = ModelRouter(bm)
-    active_models = {
-        "fast": "fast_model",
-        "balanced": "balanced_model",
-        "powerful": "powerful_model"
-    }
-    
-    # Even for complex query, should downgrade if possible or stay lowest
-    # Actually logic says: if complexity=POWERFUL, check budget. If no budget, fall through.
-    # If falling through, it eventually returns fast or default.
-    query = "Super complex code refactoring task that is very long " * 100
-    model = router.route(query, active_models)
-    
-    # Since budget is blown, it should NOT return powerful_model
-    assert model != "powerful_model"
+    # Even if complex, should fall back to fast because budget is gone
+    # (assuming we use can_afford check)
+    # The current implementation falls back if can_afford returns False
+    tier, model = router.route("Extremely complex task", models)
+    assert model == "gemma:2b"

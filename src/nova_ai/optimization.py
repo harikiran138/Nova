@@ -40,7 +40,17 @@ class ContextCompressor:
         if self.client:
             try:
                 # Use a fast model for summarization
-                prompt = f"Summarize the following conversation key points in 3 sentences:\n\n{text_blob}"
+                prompt = f"""
+                Summarize the following conversation key points in 3-5 sentences.
+                Focus on:
+                1. The main goal discussed.
+                2. Key information discovered.
+                3. Successful tool executions.
+                4. Final conclusions reached.
+                
+                CONVERSATION:
+                {text_blob}
+                """
                 return self.client.generate([], prompt, model="gemma:2b") 
             except:
                 pass

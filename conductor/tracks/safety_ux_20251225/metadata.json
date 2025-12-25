@@ -1,0 +1,8 @@
+{
+  "track_id": "safety_ux_20251225",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2025-12-25T14:00:00Z",
+  "updated_at": "2025-12-25T14:00:00Z",
+  "description": "Industrial Safety & UX Hardening: Explicit failure states, dry-run simulation, and advanced TUI visualization."
+}
