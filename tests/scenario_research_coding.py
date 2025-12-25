@@ -16,13 +16,20 @@ def agent():
                 {"step": 2, "description": "Write summary", "tool": "web.extract", "confidence": 0.8}
             ]
         }""",
+        # Response after Step 1 tool execution
+        "Found some info.",
+        # Response after Step 2 tool execution
+        "Summary written.",
         # Reflection
         "Execution successful.",
-        # Plan for second task (optional/if called again)
+        # Buffer
         "{}" 
     ]
-    # Mock stream for step execution
-    client.stream_generate.return_value = iter(['{"tool": "web.search", "args": {"query": "test"}}'])
+    # Mock stream for step execution (return a NEW iterator each time it's called)
+    client.stream_generate.side_effect = [
+        iter(['{"tool": "web.search", "args": {"query": "test"}}']), # Step 1
+        iter(['{"tool": "web.extract", "args": {"url": "test"}}'])   # Step 2 (logic calls generated again)
+    ]
     
     tools = MagicMock()
     tools.tools = {
