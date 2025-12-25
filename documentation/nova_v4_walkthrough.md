@@ -18,6 +18,7 @@ We have successfully transformed Nova into an industrial-grade, resilience-focus
 - **Self-Healing:** Automatic retries for transient tool crashes.
 - **Stress Testing:** `tests/stress_test_stability.py` validated ecosystem stability over 500 continuous iterations (Multi-Tool Mock).
 - **Install Robustness:** `verify_install_stability.sh` confirmed idempotency over 10 consecutive re-install cycles.
+- **AI Capability Evals:** `tests/run_evals.py` verifies core intelligence across Reasoning, Tools, Memory, Vision, & Safety.
 - **Regression Suite:** `run_regression.sh` validates all core subsystems in <15s.
 
 ### 4. Observability (Phase 7)
