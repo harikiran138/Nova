@@ -34,6 +34,7 @@ class Config:
     security_mode: bool = False
     turbo_mode: bool = False
     safety_level: str = "unrestricted"
+    temperature: float = 0.7
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -106,7 +107,8 @@ class Config:
             safety_level=safety_level,
             mongodb_uri=os.getenv("MONGODB_URI", "mongodb://localhost:27017"),
             mongodb_db_name=os.getenv("MONGODB_DB_NAME", "nova_agent_db"),
-            mongodb_collection_name=os.getenv("MONGODB_COLLECTION_NAME", "knowledge_base")
+            mongodb_collection_name=os.getenv("MONGODB_COLLECTION_NAME", "knowledge_base"),
+            temperature=float(os.getenv("TEMPERATURE", "0.7"))
         )
     
     def load_profiles(self) -> dict:

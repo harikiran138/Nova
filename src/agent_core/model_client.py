@@ -43,6 +43,7 @@ class OllamaClient:
         self,
         messages: List[Dict[str, str]],
         system_prompt: Optional[str] = None,
+        **kwargs: Any,
     ) -> Optional[str]:
         """Generate a response from the Ollama model.
         
@@ -62,6 +63,20 @@ class OllamaClient:
             "messages": messages,
             "stream": False,  # Use non-streaming for simplicity
         }
+        
+        # Add optional parameters like temperature, top_p, etc.
+        # Filter strictly for valid Ollama parameters if strictness needed,
+        # but passing kwargs usually works fine as Ollama ignores unknown fields or we trust caller.
+        valid_options = ["temperature", "top_k", "top_p", "seed", "repeat_penalty", "stop"]
+        options = {k: v for k, v in kwargs.items() if k in valid_options}
+        if options:
+            payload["options"] = options
+            
+        # Handle 'stop' specially if it's meant to be top-level or options-level.
+        # Ollama API expects 'options' dict for 'temperature', 'stop' etc usually go in options or top level depending on version.
+        # Recent Ollama API puts Modelfiles parameters in 'options'.
+        # However, 'stream' and 'format' are top level.
+        pass
         
         try:
             response = requests.post(

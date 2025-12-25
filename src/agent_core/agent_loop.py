@@ -186,28 +186,22 @@ class AgentLoop:
             # ... (Context injection logic)
             # (Skipping middle part for brevity in replace, but keeping enough context)
             
-            try:
-                # Define prompt and args
-                current_prompt = self.system_prompt
-                generate_kwargs = {
-                    "temperature": self.config.temperature,
-                    "stop": ["Observation:"]
-                }
-                cache_key = f"{current_prompt}_{str(self.conversation_history)}"
+            # Define prompt and args
+            current_prompt = self.system_prompt
+            generate_kwargs = {
+                "temperature": self.config.temperature,
+                "stop": ["Observation:"]
+            }
+            cache_key = f"{current_prompt}_{str(self.conversation_history)}"
 
             # Check Cache (only for simple queries, not tool outputs)
             # We use the last user message as key roughly, but full history is better.
-            # For simplicity, we cache based on the last user input if history is short.
-            cache_key = str(self.conversation_history)
             cached = self.memory.get_cached_response(cache_key)
             
             if cached and iteration == 1: # Only use cache for initial response
                 if self.status_callback: self.status_callback("thinking_end")
                 console.print("[dim]⚡ Using cached response[/dim]")
                 return cached
-
-            # Prepare arguments based on client type
-            generate_kwargs = {}
 
             try:
                 response = self.client.generate(
