@@ -1,0 +1,12 @@
+[
+  {
+    "id": "cochi1706/codingassistant",
+    "score": 0.95,
+    "description": "Optimized for fast local coding assistance."
+  },
+  {
+    "id": "Qwen/Qwen3-0.6B",
+    "score": 0.9,
+    "description": "Ultra-lightweight model for quick reasoning."
+  }
+]
