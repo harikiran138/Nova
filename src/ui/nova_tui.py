@@ -1,3 +1,4 @@
+import threading
 from pathlib import Path
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, Static
@@ -9,7 +10,7 @@ from .chat_window import ChatWindow
 from .input_box import InputBox
 from .status_bar import StatusBar
 from .widgets.command_palette import CommandPalette
-from .widgets.dashboard_widgets import SystemMonitor, VisionPanel, MemoryStream
+from .widgets.plan_tree import PlanTree
 from .asciilogo import LOGO
 
 from src.agent_core.config import Config
@@ -28,7 +29,6 @@ class NovaApp(App):
     ]
     
     def __init__(self, config: Config, profile_name: str = "general", sandbox_mode: bool = False):
-        super().__init__()
         self.config = config
         self.profile_name = profile_name
         self.sandbox_mode = sandbox_mode
@@ -36,21 +36,30 @@ class NovaApp(App):
         # Initialize Theme Manager
         self.theme_manager = ThemeManager(Path(__file__).parent / "themes")
         
+        super().__init__()
+        
         # Initialize Agent
         self.client = OllamaClient(config.ollama_base_url, config.ollama_model)
         self.tools = ToolRegistry(config.workspace_dir, config.allow_shell_commands, config.shell_command_allowlist)
-        # Pass status callback to agent
-        self.agent = AgentLoop(
-            self.client, 
-            self.tools, 
-            profile_name, 
-            sandbox_mode,
-            status_callback=self.handle_agent_event
-        )
+        self.agent = AgentLoop(self.client, self.tools, profile_name, sandbox_mode, status_callback=self.handle_agent_event, task_callback=self.on_task_update)
         
         # Load User Profile
         self.user_profile = self.config.load_user_profile()
         self.user_name = self.user_profile.get("name", "You")
+
+    def on_task_update(self, task):
+        """Update the PlanTree when a task changes."""
+        if self._thread_id == threading.get_ident():
+            self._update_plan_tree(task)
+        else:
+            self.call_from_thread(self._update_plan_tree, task)
+
+    def _update_plan_tree(self, task):
+        try:
+            tree = self.query_one(PlanTree)
+            tree.update_task(task)
+        except Exception:
+            pass # UI might not be ready
 
     @property
     def CSS(self):
@@ -59,18 +68,22 @@ class NovaApp(App):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         
-        with Container(id="main_container"):
+        with Horizontal(id="main_container"):
             # Left Column: Chat
             with Vertical(classes="panel", id="chat_area"):
                 yield Static(LOGO, classes="header")
                 yield ChatWindow(id="chat_window")
                 yield InputBox(id="input_box")
             
-            # Right Column: Intelligence Hub
-            with Vertical(id="dashboard_column"):
-                yield SystemMonitor(id="system_monitor")
-                yield VisionPanel(id="vision_panel")
-                yield MemoryStream(id="memory_stream")
+            # Middle Column: Plan Tree
+            with Vertical(classes="panel", id="plan_panel"):
+                yield Static("MISSION PLAN", classes="header")
+                yield PlanTree(id="plan_tree")
+
+            # Right Column: Tools
+            with Vertical(classes="panel", id="tool_panel"):
+                yield Static("ACTIVE TOOLS", classes="header")
+                yield Static("File System\nGit\nKnowledge Base\nShell", classes="tool-list")
             
         yield StatusBar(id="status_bar")
         yield Footer()

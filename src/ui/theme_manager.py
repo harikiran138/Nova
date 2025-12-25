@@ -51,6 +51,26 @@ class ThemeManager:
         background: $background;
         color: $text;
     }}
+
+    Horizontal {{
+        height: 100%;
+    }}
+    
+    #main_container {{
+        height: 100%;
+    }}
+
+    #chat_area {{
+        width: 50%;
+    }}
+
+    #plan_panel {{
+        width: 25%;
+    }}
+
+    #tool_panel {{
+        width: 25%;
+    }}
     
     /* Common Styles using Variables */
     .panel {{

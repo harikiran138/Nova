@@ -1,0 +1,15 @@
+{
+    "name": "Cyberpunk Neon",
+    "colors": {
+        "primary": "#00ff00",
+        "secondary": "#ff00ff",
+        "accent": "#00ffff",
+        "warning": "#ffff00",
+        "error": "#ff0000",
+        "background": "#0d0208",
+        "surface": "#1a1a1a",
+        "border": "#00ff00",
+        "text": "#00ff00",
+        "text_dim": "#008000"
+    }
+}

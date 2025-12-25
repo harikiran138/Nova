@@ -22,15 +22,15 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Knowledge Integration' (Protocol in workflow.md) [checkpoint: 1c381b3]
 
 ## Phase 3: Cyberpunk TUI & Decision Tree Visualization
-- [ ] Task: Refactor UI to support multi-pane Cyberpunk layouts
-    - [ ] Write Tests
-    - [ ] Implement Feature
-- [ ] Task: Implement Plan Tree visualization using `rich.tree`
-    - [ ] Write Tests
-    - [ ] Implement Feature
-- [ ] Task: Add neon theme and interactive status components
-    - [ ] Write Tests
-    - [ ] Implement Feature
+- [x] Task: Refactor UI to support multi-pane Cyberpunk layouts [73a9e2d]
+    - [x] Write Tests
+    - [x] Implement Feature
+- [x] Task: Implement Plan Tree visualization using `rich.tree` [e2f4a1b]
+    - [x] Write Tests
+    - [x] Implement Feature
+- [x] Task: Add neon theme and interactive status components [c3d1f2a]
+    - [x] Write Tests
+    - [x] Implement Feature
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: TUI Enhancements' (Protocol in workflow.md)
 
 ## Phase 4: Intelligence & Polish

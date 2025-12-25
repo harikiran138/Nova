@@ -60,12 +60,13 @@ class AgentLoop:
       - Vision tools run LOCALLY using Google AI Edge (MediaPipe).
     """
 
-    def __init__(self, client: OllamaClient, tools: ToolRegistry, profile_name: str = "general", sandbox_mode: bool = False, status_callback=None):
+    def __init__(self, client: OllamaClient, tools: ToolRegistry, profile_name: str = "general", sandbox_mode: bool = False, status_callback=None, task_callback=None):
         self.client = client
         self.tools = tools
         self.profile_name = profile_name
         self.sandbox_mode = sandbox_mode
         self.status_callback = status_callback
+        self.task_callback = task_callback
         self.conversation_history: List[Dict[str, str]] = []
 
         # Initialize Learning Components
@@ -467,6 +468,7 @@ class AgentLoop:
         
         console.print(f"\n[bold cyan]🚀 Starting Task: {task.goal}[/bold cyan]")
         task.status = "in_progress"
+        if self.task_callback: self.task_callback(task)
         
         for step in task.steps:
             if step.status != "pending":
@@ -474,6 +476,7 @@ class AgentLoop:
                 
             console.print(f"\n[bold yellow]Step {step.id}: {step.description}[/bold yellow]")
             step.status = "in_progress"
+            if self.task_callback: self.task_callback(task)
             
             # If step has a pre-defined tool, use it
             if step.tool:
@@ -505,6 +508,8 @@ class AgentLoop:
                     console.print(f"[red]✗ Step failed[/red]")
                     task.status = "failed"
                     break
+            
+            if self.task_callback: self.task_callback(task)
                     
         if task.status != "failed":
             task.status = "completed"
@@ -512,6 +517,8 @@ class AgentLoop:
             self.telemetry.log_task(success=True, duration_ms=0) # TODO: Add real duration
         else:
             self.telemetry.log_task(success=False, duration_ms=0)
+        
+        if self.task_callback: self.task_callback(task)
             
         return task
 
