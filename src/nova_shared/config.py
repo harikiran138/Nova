@@ -44,6 +44,7 @@ class Config:
     circuit_breaker_threshold: int = 5
     reasoning_mode: str = "react"
     model_options: Dict[str, Any] = None
+    debug_mode: bool = False  # Debug logging mode
 
     @classmethod
     def from_env(cls) -> "Config":
