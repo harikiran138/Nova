@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import './App.css'
+import { A2UIRootRenderer } from './a2ui/renderer';
+import type { A2UIRoot } from './a2ui/types';
 
 interface Message {
   role: 'user' | 'assistant' | 'system'
@@ -85,6 +87,18 @@ function App() {
     }))
   }
 
+  const isA2UI = (content: string) => {
+    try {
+      if (content.trim().startsWith('{"root":')) {
+        JSON.parse(content);
+        return true;
+      }
+    } catch (e) {
+      return false;
+    }
+    return false;
+  };
+
   return (
     <div className="app-container">
       <header className="header">
@@ -97,9 +111,15 @@ function App() {
       <div className="chat-container">
         {messages.map((msg, idx) => (
           <div key={idx} className={`message ${msg.role}`}>
-            <div className="message-content">
-              {msg.content}
-            </div>
+            {isA2UI(msg.content) ? (
+                 <div className="message-content a2ui-container" style={{ width: '100%' }}>
+                    <A2UIRootRenderer data={JSON.parse(msg.content) as A2UIRoot} />
+                 </div>
+            ) : (
+                <div className="message-content">
+                  {msg.content}
+                </div>
+            )}
           </div>
         ))}
         <div ref={messagesEndRef} />

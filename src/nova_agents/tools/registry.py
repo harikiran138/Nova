@@ -3,6 +3,7 @@ from src.nova_agents.tools.base import Tool
 # Import standard tools
 from src.nova_agents.tools.vision_tools import VisionTool
 from src.nova_agents.tools.browser_tools import BrowserTool
+from src.nova_agents.tools.a2ui_tool import A2UITool
 
 class ToolRegistry:
     """
@@ -25,6 +26,11 @@ class ToolRegistry:
             self.register(BrowserTool())
         except Exception:
             pass # Browser dependencies missing (e.g. playwright)
+
+        try:
+            self.register(A2UITool())
+        except Exception:
+            pass
 
     def register(self, tool: Tool):
         """
