@@ -32,6 +32,18 @@ class ToolRegistry:
         except Exception:
             pass
 
+        try:
+            from src.nova_agents.tools.posthog_tool import PostHogTool
+            self.register(PostHogTool())
+        except Exception:
+            pass
+
+        try:
+            from src.nova_agents.tools.postman_tool import PostmanTool
+            self.register(PostmanTool())
+        except Exception:
+            pass
+
     def register(self, tool: Tool):
         """
         Register a new tool instance.
