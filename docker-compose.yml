@@ -15,9 +15,7 @@ services:
       ALLOW_SHELL_COMMANDS: "true"
     volumes:
       - ./workspace:/workspace
-      - ./nova-core:/app/nova-core
-      - ./nova-tools:/app/nova-tools
-      - ./nova-api:/app/nova-api
+      - ./src:/app/src
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

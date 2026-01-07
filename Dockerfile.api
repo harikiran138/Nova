@@ -1,21 +1,22 @@
-FROM python:3.11-slim
+FROM python:3.10-slim
 
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y git build-essential && rm -rf /var/lib/apt/lists/*
 
-# Copy packages
-COPY nova-core /app/nova-core
-COPY nova-tools /app/nova-tools
-COPY nova-api /app/nova-api
+# Copy project definition
+COPY setup.py .
 
-# Install packages
-RUN pip install -e /app/nova-core
-RUN pip install -e /app/nova-tools
-RUN pip install -e /app/nova-api
+# Copy source code
+COPY src/ src/
 
-# Workspace directory
+# Install the package in editable mode
+RUN pip install --no-cache-dir -e .
+
+# Create workspace directory
 RUN mkdir -p /workspace
 
-CMD ["uvicorn", "nova_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the API
+# Pointing to src.api.main:app based on previous verification
+CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
