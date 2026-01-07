@@ -25,7 +25,7 @@ def test_full_system():
         load_user_profile = lambda self: {}
         
     print("\n[1] Checking Agent Prompt Injection...")
-    from agent_core.tools.registry import ToolRegistry
+    from src.nova_agents.tools.registry import ToolRegistry
     registry = ToolRegistry(Path("/tmp/nova_test"))
     
     agent = AgentLoop(MockClient(), registry)
@@ -37,7 +37,7 @@ def test_full_system():
 
     # 2. Test Vision Tool Execution & Memory
     print("\n[2] Testing Vision Tool Execution...")
-    vision_tool = registry.get_tool("vision.detect")
+    vision_tool = registry.get("vision.detect")
     if vision_tool:
         # We don't have a real image, but we can check if it returns the expected error (model missing or file missing)
         # rather than crashing.
